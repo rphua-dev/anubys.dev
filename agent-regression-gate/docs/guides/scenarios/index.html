@@ -91,7 +91,7 @@ reference_actions:
 assertions:
   - refund_issued
 max_steps: 4</code></pre></div></section>
-<section class="docs-sec" id="variants" aria-labelledby="variants-title"><h2 id="variants-title">Variants</h2><p><code>refund.v1</code>, <code>refund.v2</code>, and <code>refund.v3</code> are three variants of the family <code>refund</code>. Same family, different text.</p><p>A hash mismatch makes the run invalid before a score is published. The recorded text has to match the suite.</p></section>
+<section class="docs-sec" id="variants" aria-labelledby="variants-title"><h2 id="variants-title">Variants</h2><p><code>refund.v1</code>, <code>refund.v2</code>, and <code>refund.v3</code> are three variants of the family <code>refund</code>. Same family, different text.</p><p><code>harness validate</code> checks the scenario hash before a run. A mismatch fails that step (exit 1). The gate reads outcome files and does not treat a hash mismatch as an Invalid run.</p></section>
 <section class="docs-sec" id="yours" aria-labelledby="yours-title"><h2 id="yours-title">Bring your own <span class="docs-badge" data-state="planned">Planned</span></h2><p>Bring-your-own scenarios is Planned. This page is the format for that work. There is not yet a loader for a scenario set you host yourself.</p></section>
         </div>
         <nav class="docs-pager" aria-label="Previous and next"><a class="docs-prev" href="../../concepts/"><span>Previous</span><b>Concepts</b></a><a class="docs-next" href="../adapters/"><span>Next</span><b>Adding a provider adapter</b></a></nav>

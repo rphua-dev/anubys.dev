@@ -11,12 +11,13 @@ export const COVERAGE_RATIO = { numerator: 3, denominator: 5 };
 export const CONFIDENCE = 0.9;
 
 export const METHOD_NOTES = {
+  sample: "Simplified sample scorer, not the gate's statistic.",
   miss: "More than 5% of scheduled rollouts excluded in either arm invalidates the run. Exactly 5% is still scored. The 5% line is compared in integers.",
   coverage: "Each scenario needs at least ceil(0.6 × scheduled) valid rollouts on both arms. 0.6 is 3/5, and the ceiling uses integer arithmetic.",
   pairing: "The gap is the unweighted average of (candidate pass rate − baseline pass rate) across scenarios. Each scenario counts once. Scenarios are combined in id order, so the recorded order cannot change the verdict.",
-  interval: "Uncertainty on each pass rate is a Jeffreys binomial variance, so an all-pass or all-fail arm still carries a little noise. The 90% interval is a normal approximation around the average gap.",
   regression: "Non-inferiority, δ = 5 pp. Pass if the 90% interval's lower bound is above −5 pp. Block if its upper bound is below −5 pp. Otherwise the result is insufficient evidence, which can carry a Likely regression warning. Likely regression is a spec flag, not computed in v0.1 (deferred to v0.2). An invalid run isn't scored.",
   timeouts: "An agent timeout (a loop, or the step budget ran out) scores 0 and counts as a valid rollout. An infrastructure timeout (provider 5xx, a rate limit, or a killed CI runner) is excluded from the score and counts toward the 5% miss limit. A missing result is treated the same way.",
+  hashes: "Hashes are checked by harness validate, which fails before a run (exit 1). The gate reads outcome files and does not treat a hash mismatch as an Invalid run.",
 };
 
 function assertInteger(name, value) {
@@ -183,7 +184,6 @@ export function scoreRun(scenarios, options = {}) {
     const candidateArm = summarizeArm(scenario.candidate);
     addArm(baseline, baselineArm);
     addArm(candidate, candidateArm);
-    const mismatch = Boolean(scenario.expectedHash) && scenario.recordedHash !== scenario.expectedHash;
     const baselineNeed = requiredValid(scenario.baseline.scheduled, coverage);
     const candidateNeed = requiredValid(scenario.candidate.scheduled, coverage);
     const delta = baselineArm.passRate !== null && candidateArm.passRate !== null
@@ -192,7 +192,6 @@ export function scoreRun(scenarios, options = {}) {
     rows.push({
       id: scenario.id,
       name: scenario.name,
-      hashMismatch: mismatch,
       baseline: baselineArm,
       candidate: candidateArm,
       delta,
@@ -205,9 +204,6 @@ export function scoreRun(scenarios, options = {}) {
     }
     if (baselineArm.overflow > 0 || candidateArm.overflow > 0) {
       invalidReasons.push(`“${scenario.name}” recorded more rollouts than were scheduled. The results are not usable.`);
-    }
-    if (mismatch) {
-      invalidReasons.push(`“${scenario.name}” does not match its scenario hash. The test was edited or is out of date, so this run is invalid.`);
     }
     if (baselineArm.valid < baselineNeed) {
       invalidReasons.push(`“${scenario.name}” has ${baselineArm.valid} usable baseline runs. It needs at least ${baselineNeed}, which is 60% of the ${scenario.baseline.scheduled} scheduled, rounded up.`);

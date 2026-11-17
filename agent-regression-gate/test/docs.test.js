@@ -106,6 +106,14 @@ test("concepts keep the gate rule, the four statuses, and the miss cap", () => {
   }
   assert.match(html, /The cap is 5% of the scheduled rollouts/);
   assert.match(html, /Exactly 5% still scores/);
+  assert.match(html, /Rollouts are pooled across scenarios within each arm, and the gap is candidate pass rate minus baseline pass rate\./);
+  assert.doesNotMatch(html, /unweighted|per-scenario gaps|paired per scenario/i);
+  assert.doesNotMatch(html, /Wald|Agresti/);
+  assert.match(html, /a response model version that is missing or doesn't match the expected one/);
+  assert.doesNotMatch(html, /model version mismatch between rollouts/);
+  assert.doesNotMatch(html, /hash mismatch/);
+  assert.match(html, /arm with zero counted rollouts/);
+  assert.match(html, /Bad input, exit 2, and are not an Invalid run/);
   assert.match(html, /invalid_run/);
   assert.match(html, /minimum detectable effect/i);
   assert.match(html, /Showing the MDE on the check is planned with Milestone B \(target November 19\)/);
