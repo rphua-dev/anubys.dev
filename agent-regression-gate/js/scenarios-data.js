@@ -17,14 +17,13 @@ export const SAMPLE_TABS = [
 
 const BOARD_1_COMMANDS = `python3 -m venv .anubys-build
 .anubys-build/bin/python -m pip install "build==1.3.0"
-python -m build --outdir dist
+.anubys-build/bin/python -m build --outdir dist
 
 python3 -m venv .anubys-prove
 .anubys-prove/bin/python -m pip install --require-hashes -r requirements.lock
 .anubys-prove/bin/python -m pip install --no-deps dist/anubys-0.0.1-py3-none-any.whl
 
-export PATH=".anubys-prove/bin:\${PATH}"
-export HOME=<user>
+export PATH="$PWD/.anubys-prove/bin:\${PATH}"
 SUITE="$(python -c 'from harness.bundled import suite_dir; print(suite_dir())')"
 CASSETTES="$(python -c 'from harness.bundled import cassette_dir; print(cassette_dir())')"
 
@@ -316,16 +315,16 @@ const BOARD_6_RESULTS = `{
   ]
 }`;
 
-const BOARD_7_COMMANDS = `python scripts/check_monthly_spend.py \\
+const BOARD_7_COMMANDS = `.anubys-prove/bin/python scripts/check_monthly_spend.py \\
   --log spend-under.jsonl --threshold 38
 
-python scripts/check_monthly_spend.py \\
+.anubys-prove/bin/python scripts/check_monthly_spend.py \\
   --log spend-under.jsonl \\
   --threshold 38 \\
   --ceiling 1 \\
   --runs 1
 
-harness validate suites/tau_retail/examples`;
+.anubys-prove/bin/harness validate suites/tau_retail/examples`;
 
 const BOARD_7_OUTPUT = `2026-11 logged spend is $37.50, under the $38 cap.
 Exit code: 0
@@ -344,7 +343,7 @@ ok 1 scenario(s), 1 suite file(s)
 Exit code: 0`;
 
 const BOARD_8_COMMANDS = `# merge step: live_spend_rows.restore() called in-process with two local logs (no GitHub call)
-python scripts/check_monthly_spend.py \\
+.anubys-prove/bin/python scripts/check_monthly_spend.py \\
   --log machine-a.jsonl \\
   --threshold 38 \\
   --month 2026-11`;

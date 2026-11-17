@@ -212,6 +212,17 @@ test("captured boards keep the real logs, and every board uses harness", () => {
   const install = board("prove-install");
   assert.match(install.samples.output, /Successfully installed anubys-0\.0\.1/);
   assert.match(install.samples.commands, /anubys-0\.0\.1-py3-none-any\.whl/);
+  assert.match(install.samples.commands, /^\.anubys-build\/bin\/python -m build --outdir dist$/m);
+  assert.match(install.samples.commands, /export PATH="\$PWD\/\.anubys-prove\/bin:\$\{PATH\}"/);
+  assert.doesNotMatch(install.samples.commands, /HOME=/);
+  assert.match(install.samples.commands, /<model-version>/);
+  assert.doesNotMatch(install.samples.commands, /gemini-/);
+  const installDialog = renderDialogHtml(install);
+  assert.equal((installDialog.match(/Model name redacted\. Use your configured model\./g) || []).length, 3);
+  const cheapDialog = renderDialogHtml(board("cheap-pull-requests"));
+  assert.match(cheapDialog, /Model name redacted\. Use your configured model\./);
+  const spendDialog = renderDialogHtml(board("spend-cap"));
+  assert.match(spendDialog, /Model name redacted\. Use your configured model\./);
   assert.match(renderDialogHtml(install), /Wheel anubys-0\.0\.1/);
   assert.match(install.samples.results, /total_cost_usd=0/);
   assert.match(install.samples.results, /pass=1/);
@@ -223,12 +234,15 @@ test("captured boards keep the real logs, and every board uses harness", () => {
   assert.match(renderDialogHtml(cheap), /Exit code 2/);
 
   const spend = board("spend-cap");
+  assert.match(spend.samples.commands, /\.anubys-prove\/bin\/python scripts\/check_monthly_spend\.py/);
+  assert.match(spend.samples.commands, /\.anubys-prove\/bin\/harness validate suites\/tau_retail\/examples/);
   assert.match(spend.samples.output, /Refusing to start a live run\./);
   assert.doesNotMatch(spend.samples.output, /^error:/m);
   assert.match(spend.samples.example, /^error: this month's logged spend/);
   assert.match(renderDialogHtml(spend), /does not add an <code>error:<\/code> prefix/);
 
   const logs = board("two-spend-logs");
+  assert.match(logs.samples.commands, /\.anubys-prove\/bin\/python scripts\/check_monthly_spend\.py/);
   assert.match(logs.samples.output, /month_total_usd=21\.00/);
   assert.match(logs.samples.output, /\$21\.00, under the \$38 cap/);
   assert.match(logs.samples.results, /~\/\.anubys\/spend_log\.jsonl/);

@@ -117,6 +117,8 @@ function paragraphs(value) {
     .join("");
 }
 
+const MODEL_REDACTION = "Model name redacted. Use your configured model.";
+
 function sampleBlock(text, { pipeline = false, caption = "", label = "Illustrative", example = true } = {}) {
   if (!text) return "";
   const heading = pipeline
@@ -127,7 +129,10 @@ function sampleBlock(text, { pipeline = false, caption = "", label = "Illustrati
   const flag = label ? `<span class="sample-flag">${escapeHtml(label)}</span>` : "";
   const exampleChip = example ? `<span class="example-tag">Example</span>` : "";
   const meta = [flag, exampleChip].filter(Boolean).join(" ");
-  return `<div class="scenario-sample">${heading}<p class="scenario-sample-meta">${meta}</p><pre class="scenario-pre" tabindex="0"><code>${escapeHtml(text)}</code></pre></div>`;
+  const redacted = label === "Captured output" && String(text).includes("<model-version>")
+    ? `<p class="scenario-callout">${escapeHtml(MODEL_REDACTION)}</p>`
+    : "";
+  return `<div class="scenario-sample">${heading}${redacted}<p class="scenario-sample-meta">${meta}</p><pre class="scenario-pre" tabindex="0"><code>${escapeHtml(text)}</code></pre></div>`;
 }
 
 function sampleOpts(board, extra = {}) {
