@@ -53,7 +53,7 @@ test("workflow copy, exit codes, and artifacts stay inside the v0.1 rules", () =
     [/planned_rollouts|completed_rollouts/, "rollout count"],
   ];
   for (const [pattern, name] of banned) assert.doesNotMatch(html, pattern, name);
-  assert.doesNotMatch(html.replaceAll("fail the CI job", ""), /\bfail\b/);
+  assert.doesNotMatch(html.replaceAll("fail the CI job by default", "").replaceAll("fails the CI job by default", ""), /\bfail\b/);
   assert.deepEqual(WORKFLOW_STEPS.map((step) => step.name), [
     "Pull request",
     "CI job",
@@ -89,7 +89,7 @@ test("the diagram renders six tabs, four verdicts, and the sample artifacts", ()
   assert.match(html, /total_cost_usd/);
   assert.match(html, /1\.25/);
   assert.match(html, /CLI summary/);
-  assert.match(html, /total_cost_usd 1\.25/);
+  assert.match(html, /total_cost_usd=1\.25 …/);
   assert.doesNotMatch(html, /completed_rollouts 40/);
   assert.match(html, /README workflow snippet/);
   assert.match(html, /A packaged Action is v0\.2\./);
@@ -99,7 +99,7 @@ test("the diagram renders six tabs, four verdicts, and the sample artifacts", ()
   assert.match(html, /It is not a verdict\./);
   assert.match(html, /Block is the only verdict that says the candidate is clearly worse\./);
   assert.match(html, /Only Pass exits 0/);
-  assert.match(html, /Exit codes 1, 3, and 4 all fail the CI job/);
+  assert.match(html, /Exit codes 1, 3, and 4 all fail the CI job by default/);
   assert.match(html, /illustrative, pending real A\/A and Block results/);
   assert.match(html, /id="run-live" aria-live="polite"/);
   assert.match(html, /id="run-status">/);
@@ -121,6 +121,8 @@ test("the live region speaks on pause or finish, not on an animation step", () =
   const start = createWorkflowState();
   assert.equal(announceLive(undefined, start), null);
   assert.equal(announceLive("tick", tickPlay(togglePlay(start))), null);
+  const stepped = stepOnce(createWorkflowState({ reduced: true }));
+  assert.equal(announceLive("step", stepped), "Step 2 of 6. CI job.");
   const paused = togglePlay(togglePlay(start));
   assert.equal(paused.playing, false);
   assert.equal(announceLive("pause", paused), "Paused. Step 1 of 6. Pull request.");
@@ -187,9 +189,17 @@ test("gate and results copy match the pooled gap and the sample sentence", () =>
   assert.ok(gate.includes(pooled));
   assert.doesNotMatch(gate, /unweighted mean of per-scenario gaps|Paired comparison|Each one counts once/);
   assert.doesNotMatch(gate, /Wald|Agresti/);
-  assert.match(gate, /model version mismatch between rollouts/);
+  assert.match(gate, /response model version that is missing or doesn't match the expected one/);
+  assert.doesNotMatch(gate, /model version mismatch between rollouts/);
+  assert.doesNotMatch(gate, /hash mismatch makes the run invalid|mismatch invalidates the run|hash invalidates the run/);
+  assert.match(gate, /harness validate/);
+  assert.match(gate, /exit 1/);
   assert.match(gate, /arm with zero counted rollouts/);
   assert.match(gate, /are not an Invalid run/);
+  const scenarios = read("docs/guides/scenarios/index.html");
+  assert.match(scenarios, /harness validate/);
+  assert.match(scenarios, /exit 1/);
+  assert.doesNotMatch(scenarios, /makes the run invalid/);
   assert.match(results, /Pass rates in that file are <span class="example-tag">Example<\/span> figures from the bundled sample\./);
   assert.doesNotMatch(results, /Pass rates in that sample are numbers/);
 });

@@ -103,7 +103,7 @@
                 </li>
                 <li>
                   <h3>Validity</h3>
-                  <p>More than 5% of scheduled rollouts missing or infrastructure-broken, on either arm, invalidates the run. Exactly 5% remains valid. Each scenario also has a coverage floor on both arms. A model version mismatch between rollouts invalidates the run. An arm with zero counted rollouts invalidates the run. Baseline and candidate that don't cover the same scenarios are Bad input, exit 2, and are not an Invalid run.</p>
+                  <p>More than 5% of scheduled rollouts missing or infrastructure-broken, on either arm, invalidates the run. Exactly 5% remains valid. Each scenario also has a coverage floor on both arms. A response model version that is missing or doesn't match the expected one invalidates the run. An arm with zero counted rollouts invalidates the run. Baseline and candidate that don't cover the same scenarios are Bad input, exit 2, and are not an Invalid run.</p>
                   <p class="annotation">5 → 3 usable · 7 → 5 · 20 → 12 · 6% on one arm → invalid</p>
                   <div class="tvis" aria-hidden="true">
                     <p class="tvis-kicker">Miss rate</p>
@@ -115,13 +115,13 @@
                 </li>
                 <li>
                   <h3>Content hashes</h3>
-                  <p>Each scenario is hashed. If the recorded text does not match the suite, the run is invalid before a score is published.</p>
-                  <p class="annotation">SHA-256 of the scenario text</p>
+                  <p>Each scenario is hashed. <code>harness validate</code> checks that hash before a run. A mismatch fails that step (exit 1). The gate reads outcome files and does not treat a hash mismatch as an Invalid run.</p>
+                  <p class="annotation">SHA-256, checked before a run</p>
                   <div class="tvis" aria-hidden="true">
                     <p class="tvis-kicker">SHA-256</p>
                     <p class="tvis-hash">cbb85ce6…0ebed1</p>
-                    <p class="tvis-row"><span>Recorded text</span><b>Match</b></p>
-                    <p class="tvis-foot">A mismatch invalidates the run</p>
+                    <p class="tvis-row"><span>harness validate</span><b>Exit 1</b></p>
+                    <p class="tvis-foot">Checked before a run</p>
                   </div>
                 </li>
               </ol>
@@ -140,7 +140,7 @@
           <details><summary>What is a rollout?</summary><p>One execution of one scenario. Pass scores 1. Fail scores 0. Scenarios are repeated because a single execution is not a stable estimate.</p></details>
           <details><summary>Why repeated rollouts?</summary><p>Repeated rollouts per arm. Rollouts are pooled across scenarios within each arm, and the gap is candidate pass rate minus baseline pass rate.</p></details>
           <details><summary>What does 90% confidence mean here?</summary><p>Non-inferiority, δ = 5 pp. Pass if the 90% interval's lower bound is above −5 pp. Block if its upper bound is below −5 pp. Otherwise the result is insufficient evidence, which can carry a Likely regression warning. Likely regression is a spec flag, not computed in v0.1 (deferred to v0.2). An invalid run isn't scored.</p></details>
-          <details><summary>When is a run invalid?</summary><p>When more than 5% of scheduled rollouts on either arm are missing or broken by infrastructure. Exactly 5% is still scored. Each scenario also needs at least 60% of its scheduled rollouts usable, rounded up. A mismatch between the recorded scenario text and its hash invalidates the run. A model version mismatch between rollouts invalidates the run. An arm with zero counted rollouts invalidates the run. Baseline and candidate that don't cover the same scenarios are Bad input, exit 2, and are not an Invalid run.</p></details>
+          <details><summary>When is a run invalid?</summary><p>When more than 5% of scheduled rollouts on either arm are missing or broken by infrastructure. Exactly 5% is still scored. Each scenario also needs at least 60% of its scheduled rollouts usable, rounded up. A response model version that is missing or doesn't match the expected one invalidates the run. An arm with zero counted rollouts invalidates the run. Baseline and candidate that don't cover the same scenarios are Bad input, exit 2, and are not an Invalid run.</p></details>
           <details><summary>Does a timeout count as a failure?</summary><p>A loop or an exhausted step budget scores 0. A provider error, a rate limit, or a killed CI runner is excluded and counts toward the 5% miss cap.</p></details>
         </div>
       </div>

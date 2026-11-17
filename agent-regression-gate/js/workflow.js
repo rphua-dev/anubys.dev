@@ -5,7 +5,7 @@
  * Likely regression is a spec flag, not computed in v0.1.
  * v0.1 CI is a README workflow snippet. A packaged Action is v0.2.
  * Exit codes: pass 0, block 1, bad input 2, insufficient 3, invalid 4.
- * Only Pass exits 0. Exit codes 1, 3, and 4 all fail the CI job.
+ * Only Pass exits 0. Exit codes 1, 3, and 4 all fail the CI job by default.
  */
 
 import { railIndexFromKey } from "./story.js";
@@ -64,7 +64,7 @@ export const WORKFLOW_STEPS = [
     example: true,
     kind: "code",
     artifact: SUMMARY,
-    cli: "total_cost_usd 1.25",
+    cli: "total_cost_usd=1.25 …",
   },
   {
     id: "gate",
@@ -93,7 +93,7 @@ export const WORKFLOW_STEPS = [
     index: "06",
     name: "Merge",
     title: "Merge is allowed or blocked",
-    plain: "Only Pass exits 0, so the CI job passes and merge is allowed. Exit codes 1, 3, and 4 all fail the CI job. Block is the only verdict that says the candidate is clearly worse. Pick a verdict below to see what the team does next.",
+    plain: "Only Pass exits 0, so the CI job passes and merge is allowed. Exit codes 1, 3, and 4 all fail the CI job by default. Block is the only verdict that says the candidate is clearly worse. Pick a verdict below to see what the team does next.",
     artifactLabel: "Check result",
     example: true,
     kind: "merge",
@@ -117,7 +117,7 @@ export const VERDICT_CHOICES = [
     merge: "blocked",
     mergeLabel: "Blocked",
     check: "Example. Baseline 92% · Candidate 70% · Gap −22 pp. Upper bound −14 pp, below −5 pp.",
-    next: "Exit 1 fails the CI job. Block is the only verdict that says the candidate is clearly worse. The team revises the candidate and runs the check again.",
+    next: "Exit 1 fails the CI job by default. Block is the only verdict that says the candidate is clearly worse. The team revises the candidate and runs the check again.",
   },
   {
     id: "insufficient",
@@ -126,7 +126,7 @@ export const VERDICT_CHOICES = [
     merge: "held",
     mergeLabel: "Not cleared",
     check: "Example. Baseline 92% · Candidate 88% · Gap −4 pp. Interval −11 to +3 pp.",
-    next: "Exit 3 fails the CI job. The pull request is not cleared. The team gathers more evidence before treating the change as ready to merge. Likely regression is a spec flag on this verdict, not computed in v0.1.",
+    next: "Exit 3 fails the CI job by default. The pull request is not cleared. The team gathers more evidence before treating the change as ready to merge. Likely regression is a spec flag on this verdict, not computed in v0.1.",
   },
   {
     id: "invalid",
@@ -135,7 +135,7 @@ export const VERDICT_CHOICES = [
     merge: "held",
     mergeLabel: "Not cleared",
     check: "Not scored.",
-    next: "Exit 4 fails the CI job. The pull request is not cleared. The team fixes the run and starts again. An invalid run is not scored.",
+    next: "Exit 4 fails the CI job by default. The pull request is not cleared. The team fixes the run and starts again. An invalid run is not scored.",
   },
 ];
 
@@ -186,14 +186,14 @@ export function validateWorkflow() {
   if (!text.includes("A packaged Action is v0.2.")) errors.push("action");
   if (!/non-inferiority/i.test(text) || !text.includes("5 pp")) errors.push("margin");
   if (!text.includes("run_summary.json") || !text.includes("total_cost_usd") || !text.includes("1.25")) errors.push("summary");
-  if (!text.includes("CLI summary") || !text.includes("total_cost_usd 1.25")) errors.push("cli");
+  if (!text.includes("CLI summary") || !text.includes("total_cost_usd=1.25 …")) errors.push("cli");
   if (/\b(planned_rollouts|completed_rollouts)\b/.test(text)) errors.push("rollout count");
   if (!text.includes("Likely regression") || !text.includes("not computed in v0.1")) errors.push("flag");
   if (!text.includes("Bad input")) errors.push("bad input");
   if (text.includes("Bad args")) errors.push("bad args");
   if (!text.includes("It is not a verdict.")) errors.push("not a verdict");
   if (!text.includes("Block is the only verdict that says the candidate is clearly worse.")) errors.push("block");
-  if (!text.includes("Exit codes 1, 3, and 4 all fail the CI job.")) errors.push("ci exits");
+  if (!text.includes("Exit codes 1, 3, and 4 all fail the CI job by default.")) errors.push("ci exits");
   if (!/illustrative, pending real A\/A and Block results/.test(text)) errors.push("illustrative");
   if (/Wald|Agresti-Caffo|Agresti/.test(text)) errors.push("interval method");
   if (!text.includes('role="tablist"') || !text.includes('role="tab"') || !text.includes('role="tabpanel"')) errors.push("aria");
@@ -239,11 +239,13 @@ export function workflowIndexFromKey(key, index, count) {
 }
 
 export function announceLive(reason, state) {
-  if (reason !== "pause" && reason !== "finish") return null;
   const shown = shownStepIndex(state);
   const step = WORKFLOW_STEPS[shown];
-  const lead = reason === "pause" ? "Paused" : "Finished";
-  return `${lead}. Step ${shown + 1} of ${WORKFLOW_STEPS.length}. ${step.name}.`;
+  const place = `Step ${shown + 1} of ${WORKFLOW_STEPS.length}. ${step.name}.`;
+  if (reason === "step") return place;
+  if (reason === "pause") return `Paused. ${place}`;
+  if (reason === "finish") return `Finished. ${place}`;
+  return null;
 }
 
 export function playLabel(state) {
@@ -401,7 +403,7 @@ export function renderWorkflowHtml() {
     <div class="run-panels">${panels}</div>
     <div class="verdict-explorer">
       <h3 id="verdict-explorer-title">What the check shows</h3>
-      <p class="v-line">Four verdicts. Block is the only verdict that says the candidate is clearly worse. Only Pass exits 0. Exit codes 1, 3, and 4 all fail the CI job. The rates and intervals are Example figures, illustrative, pending real A/A and Block results.</p>
+      <p class="v-line">Four verdicts. Block is the only verdict that says the candidate is clearly worse. Only Pass exits 0. Exit codes 1, 3, and 4 all fail the CI job by default. The rates and intervals are Example figures, illustrative, pending real A/A and Block results.</p>
       <div class="verdict-picks" role="tablist" aria-label="Example verdicts" aria-orientation="horizontal">
         ${picks}
       </div>
@@ -534,9 +536,10 @@ export function bindWorkflow(root, win = typeof window === "undefined" ? null : 
 
   play?.addEventListener("click", () => {
     const wasPlaying = state.playing;
-    state = state.reduced ? stepOnce(state) : togglePlay(state);
-    const paused = !state.reduced && wasPlaying && !state.playing;
-    paint(paused ? "pause" : undefined);
+    const reduced = state.reduced;
+    state = reduced ? stepOnce(state) : togglePlay(state);
+    const paused = !reduced && wasPlaying && !state.playing;
+    paint(reduced ? "step" : paused ? "pause" : undefined);
     arm();
   });
 

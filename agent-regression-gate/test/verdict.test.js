@@ -4,6 +4,7 @@ import test from "node:test";
 
 import { CANDIDATES, SCENARIO_SETS, buildRun } from "../js/demo-data.js";
 import {
+  METHOD_NOTES,
   armMissExceeds,
   interpretSlot,
   requiredValid,
@@ -157,6 +158,23 @@ test("simulated presets land on the three verdicts", () => {
       assert.equal(result.verdict, expected[candidate.id], `${set.id}/${candidate.id}`);
     }
   }
+});
+
+test("a scenario hash mismatch is not an invalid run", () => {
+  const result = scoreRun([
+    scenario("hashed", {
+      expectedHash: "abc",
+      recordedHash: "def",
+      baseline: { scheduled: 10, slots: Array.from({ length: 10 }, () => "pass") },
+      candidate: { scheduled: 10, slots: Array.from({ length: 10 }, () => "pass") },
+    }),
+  ]);
+  assert.equal(result.scenarios[0].hashMismatch, true);
+  assert.notEqual(result.verdict, "invalid_run");
+  assert.doesNotMatch(result.why, /scenario hash|Invalid run/);
+  assert.match(METHOD_NOTES.hashes, /harness validate/);
+  assert.match(METHOD_NOTES.hashes, /exit 1/);
+  assert.match(METHOD_NOTES.hashes, /does not treat a hash mismatch as an Invalid run/);
 });
 
 test("demo scenario hashes are the SHA-256 of the scenario text", () => {
