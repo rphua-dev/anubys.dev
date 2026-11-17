@@ -144,14 +144,14 @@ provenance:
 
 const BOARD_4_COMMANDS = `harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5 --json runs/verdict.json`;
 
-const BOARD_4_OUTPUT = `$ harness run suites/my_retail --model gemini-2.5-flash-lite --mode replay --cassettes cassettes/baseline --out runs/baseline
-run_id=2026-11-17-my_retail-3f9a1c2e date=2026-11-17 git_sha=a1b2c3d model=gemini-2.5-flash-lite mode=replay
+const BOARD_4_OUTPUT = `$ harness run suites/my_retail --model <baseline-model> --mode replay --cassettes cassettes/baseline --out runs/baseline
+run_id=2026-11-17-my_retail-3f9a1c2e date=2026-11-17 git_sha=a1b2c3d model=<baseline-model> mode=replay
 outcomes pass=470 fail=30 env_miss=0 timeout=0 error=0
 total_cost_usd=0.00 cached_input_tokens=0 p50_s=4.2 max_s=19.8
 wrote runs/baseline/run_summary.json
 
-$ harness run suites/my_retail --model gemini-3.5-flash-lite --mode replay --cassettes cassettes/candidate --out runs/candidate
-run_id=2026-11-17-my_retail-7d41e0b9 date=2026-11-17 git_sha=a1b2c3d model=gemini-3.5-flash-lite mode=replay
+$ harness run suites/my_retail --model <candidate-model> --mode replay --cassettes cassettes/candidate --out runs/candidate
+run_id=2026-11-17-my_retail-7d41e0b9 date=2026-11-17 git_sha=a1b2c3d model=<candidate-model> mode=replay
 outcomes pass=469 fail=31 env_miss=0 timeout=0 error=0
 total_cost_usd=0.00 cached_input_tokens=0 p50_s=3.1 max_s=14.6
 wrote runs/candidate/run_summary.json
@@ -171,8 +171,8 @@ baseline_counted: 500
 candidate_pass_rate: 0.938
 candidate_passes: 469
 candidate_counted: 500
-baseline_model_id: gemini-2.5-flash-lite
-candidate_model_id: gemini-3.5-flash-lite
+baseline_model_id: <baseline-model>
+candidate_model_id: <candidate-model>
 baseline_total_cost_usd: 0.00
 candidate_total_cost_usd: 0.00
 harness gate exit code: 0`;
@@ -194,14 +194,14 @@ const BOARD_4_RESULTS = `{
 
 const BOARD_5_COMMANDS = `harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5`;
 
-const BOARD_5_OUTPUT = `$ harness run suites/my_retail --model gemini-2.5-flash-lite --mode replay --cassettes cassettes/baseline --out runs/baseline
-run_id=2026-11-17-my_retail-0c6b2a15 date=2026-11-17 git_sha=a1b2c3d model=gemini-2.5-flash-lite mode=replay
+const BOARD_5_OUTPUT = `$ harness run suites/my_retail --model <baseline-model> --mode replay --cassettes cassettes/baseline --out runs/baseline
+run_id=2026-11-17-my_retail-0c6b2a15 date=2026-11-17 git_sha=a1b2c3d model=<baseline-model> mode=replay
 outcomes pass=88 fail=12 env_miss=0 timeout=0 error=0
 total_cost_usd=0.00 cached_input_tokens=0 p50_s=4.0 max_s=17.5
 wrote runs/baseline/run_summary.json
 
-$ harness run suites/my_retail --model gemini-3.5-flash-lite --mode replay --cassettes cassettes/candidate --out runs/candidate
-run_id=2026-11-17-my_retail-91ae5d03 date=2026-11-17 git_sha=a1b2c3d model=gemini-3.5-flash-lite mode=replay
+$ harness run suites/my_retail --model <candidate-model> --mode replay --cassettes cassettes/candidate --out runs/candidate
+run_id=2026-11-17-my_retail-91ae5d03 date=2026-11-17 git_sha=a1b2c3d model=<candidate-model> mode=replay
 outcomes pass=86 fail=14 env_miss=0 timeout=0 error=0
 total_cost_usd=0.00 cached_input_tokens=0 p50_s=3.0 max_s=12.9
 wrote runs/candidate/run_summary.json
@@ -221,8 +221,8 @@ baseline_counted: 100
 candidate_pass_rate: 0.86
 candidate_passes: 86
 candidate_counted: 100
-baseline_model_id: gemini-2.5-flash-lite
-candidate_model_id: gemini-3.5-flash-lite
+baseline_model_id: <baseline-model>
+candidate_model_id: <candidate-model>
 baseline_total_cost_usd: 0.00
 candidate_total_cost_usd: 0.00
 Error: Process completed with exit code 3.`;
@@ -269,8 +269,8 @@ const BOARD_5_DIAGNOSTICS = `[
 
 const BOARD_6_COMMANDS = `harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5 --json gate.json`;
 
-const BOARD_6_OUTPUT = `$ harness run suites/my_retail --model gemini-3.5-flash-lite --mode live --ceiling 1 --out runs/candidate
-run_id=2026-11-17-my_retail-b27c9f40 date=2026-11-17 git_sha=a1b2c3d model=gemini-3.5-flash-lite model_version=3.5-flash-lite-07-2026 mode=live
+const BOARD_6_OUTPUT = `$ harness run suites/my_retail --model <candidate-model> --mode live --ceiling 1 --out runs/candidate
+run_id=2026-11-17-my_retail-b27c9f40 date=2026-11-17 git_sha=a1b2c3d model=<candidate-model> model_version=<model-version> mode=live
 outcomes pass=15 fail=2 env_miss=0 timeout=3 error=0
 total_cost_usd=0.41 cached_input_tokens=1200 p50_s=3.4 max_s=21.0
 wrote runs/candidate/run_summary.json
@@ -288,8 +288,8 @@ baseline_counted: 20
 candidate_pass_rate: 0.882352941176
 candidate_passes: 15
 candidate_counted: 17
-baseline_model_id: gemini-2.5-flash-lite
-candidate_model_id: gemini-3.5-flash-lite
+baseline_model_id: <baseline-model>
+candidate_model_id: <candidate-model>
 baseline_total_cost_usd: 0.38
 candidate_total_cost_usd: 0.41
 reasons:

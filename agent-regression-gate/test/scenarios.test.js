@@ -181,7 +181,7 @@ test("boards 3 to 6 keep the gate command, the top-level verdict, and the run-lo
   assert.equal(misses.verdict.display, "Invalid run");
   assert.equal(misses.verdict.exit, 4);
   assert.match(misses.samples.output, /timeout=3/);
-  assert.match(misses.samples.output, /model_version=3\.5-flash-lite-07-2026/);
+  assert.match(misses.samples.output, /model=<candidate-model> model_version=<model-version>/);
   assert.match(misses.samples.commands, /--json gate\.json/);
   assert.match(misses.samples.results, /"verdict": "invalid_run"/);
   assert.match(misses.samples.results, /"difference": null/);
@@ -259,6 +259,21 @@ test("captured boards keep the real logs, and every board uses harness", () => {
     assert.equal(board(id).sampleLabel, "Captured output");
     assert.equal(board(id).sampleExample, false);
   }
+});
+
+test("scenarios data and the rendered page do not name a Gemini model version", () => {
+  const banned = [/gemini-\d/i, /\d\.\d-flash/i];
+  const data = read("js/scenarios-data.js");
+  const page = read("scenarios/index.html");
+  const rendered = [
+    data,
+    page,
+    renderGridHtml(),
+    ...SCENARIOS.map((item) => renderDialogHtml(item)),
+  ].join("\n");
+  for (const pattern of banned) assert.doesNotMatch(rendered, pattern);
+  assert.match(data, /gemini_pricing\.yaml/);
+  assert.match(board("environment-misses").samples.output, /model_version=<model-version>/);
 });
 
 test("new scenario files and rendered boards stay clear of banned copy", () => {
