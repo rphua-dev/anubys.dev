@@ -60,7 +60,7 @@ export const WORKFLOW_STEPS = [
     name: "Rollouts",
     title: "Baseline vs candidate",
     plain: "The job runs the same scenario suite on two arms: the baseline already in use, and the candidate on the pull request. harness run writes run_summary.json plus a CLI summary. The dollar amount is the raw spend for that run. The figures are an Example, illustrative, pending real A/A and Block results.",
-    artifactLabel: "run_summary.json",
+    artifactLabel: "run_summary.json excerpt",
     example: true,
     kind: "code",
     artifact: SUMMARY,
@@ -185,7 +185,7 @@ export function validateWorkflow() {
   if (!text.includes("README workflow snippet")) errors.push("snippet");
   if (!text.includes("A packaged Action is v0.2.")) errors.push("action");
   if (!/non-inferiority/i.test(text) || !text.includes("5 pp")) errors.push("margin");
-  if (!text.includes("run_summary.json") || !text.includes("total_cost_usd") || !text.includes("1.25")) errors.push("summary");
+  if (!text.includes("run_summary.json excerpt") || !text.includes("total_cost_usd") || !text.includes("1.25")) errors.push("summary");
   if (!text.includes("CLI summary") || !text.includes("total_cost_usd=1.25 …")) errors.push("cli");
   if (/\b(planned_rollouts|completed_rollouts)\b/.test(text)) errors.push("rollout count");
   if (!text.includes("Likely regression") || !text.includes("not computed in v0.1")) errors.push("flag");

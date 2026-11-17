@@ -600,7 +600,7 @@ function renderDemo() {
   const shell = el("div", { class: "console" }, [
     el("div", { class: "console-bar" }, [
       el("strong", {}, "Sample run"),
-      el("span", {}, "Local configuration. Not results.json. Not a customer benchmark."),
+      el("span", {}, "Simplified sample scorer, not the gate's statistic. Local configuration. Not results.json. Not a customer benchmark."),
     ]),
     el("div", { class: "console-body" }, [
       el("div", { class: "pickers" }, [
@@ -609,7 +609,7 @@ function renderDemo() {
       ]),
       el("div", { class: "runbar" }, [
         el("button", { type: "button", class: "btn btn-primary", id: "run-btn", onclick: run }, "Run"),
-        el("p", {}, "Repeated rollouts per arm · paired by scenario"),
+        el("p", {}, "Simplified sample scorer, not the gate's statistic."),
       ]),
       el("ul", { class: "legend" }, [
         legendItem("pass", "Pass"),

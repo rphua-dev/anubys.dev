@@ -160,7 +160,7 @@ test("simulated presets land on the three verdicts", () => {
   }
 });
 
-test("a scenario hash mismatch is not an invalid run", () => {
+test("the sample scorer ignores scenario hashes and does not name an interval method", () => {
   const result = scoreRun([
     scenario("hashed", {
       expectedHash: "abc",
@@ -169,9 +169,12 @@ test("a scenario hash mismatch is not an invalid run", () => {
       candidate: { scheduled: 10, slots: Array.from({ length: 10 }, () => "pass") },
     }),
   ]);
-  assert.equal(result.scenarios[0].hashMismatch, true);
+  assert.equal("hashMismatch" in result.scenarios[0], false);
   assert.notEqual(result.verdict, "invalid_run");
   assert.doesNotMatch(result.why, /scenario hash|Invalid run/);
+  const notes = Object.values(METHOD_NOTES).join("\n");
+  assert.match(notes, /Simplified sample scorer, not the gate's statistic\./);
+  assert.doesNotMatch(notes, /Jeffreys|normal approximation|Agresti|Wald/);
   assert.match(METHOD_NOTES.hashes, /harness validate/);
   assert.match(METHOD_NOTES.hashes, /exit 1/);
   assert.match(METHOD_NOTES.hashes, /does not treat a hash mismatch as an Invalid run/);

@@ -219,8 +219,6 @@ export function buildRun(setId, candidateId) {
       id: scenario.id,
       name: scenario.name,
       prompt: scenario.prompt,
-      expectedHash: scenario.expectedHash,
-      recordedHash: scenario.expectedHash,
       baseline: {
         scheduled: scenario.baselineScheduled,
         slots: slotsFromCounts(scenario.baselineScheduled, scenario.baseline),

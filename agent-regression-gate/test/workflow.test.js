@@ -85,7 +85,7 @@ test("the diagram renders six tabs, four verdicts, and the sample artifacts", ()
   assert.match(html, /aria-label="Example verdicts"/);
   assert.match(html, /Play the run/);
   assert.match(html, /Orange traces the run/);
-  assert.match(html, /run_summary\.json/);
+  assert.match(html, /run_summary\.json excerpt/);
   assert.match(html, /total_cost_usd/);
   assert.match(html, /1\.25/);
   assert.match(html, /CLI summary/);
@@ -201,6 +201,11 @@ test("gate and results copy match the pooled gap and the sample sentence", () =>
   assert.match(scenarios, /exit 1/);
   assert.doesNotMatch(scenarios, /makes the run invalid/);
   assert.match(results, /Pass rates in that file are <span class="example-tag">Example<\/span> figures from the bundled sample\./);
+  assert.match(results, /Simplified sample scorer, not the gate's statistic\./);
+  const demo = read("js/main.js");
+  assert.match(demo, /Simplified sample scorer, not the gate's statistic\./);
+  assert.doesNotMatch(demo, /paired by scenario/);
+  assert.doesNotMatch(`${demo}\n${read("js/verdict.js")}`, /Jeffreys|normal approximation/);
   assert.doesNotMatch(results, /Pass rates in that sample are numbers/);
 });
 
