@@ -170,7 +170,7 @@ test("boards 3 to 6 keep the gate command, the top-level verdict, and the run-lo
   assert.match(interval.samples.results, /"verdict": "insufficient_evidence"/);
   assert.doesNotMatch(interval.samples.results, /diagnostics/);
   assert.match(interval.samples.diagnostics, /"scenario_id": "acme.return.003.v1"/);
-  assert.equal(interval.samples.resultsCaption, "Gate JSON (Example)");
+  assert.equal(interval.samples.resultsCaption, "Gate JSON excerpt, rounded for display");
   assert.equal(interval.samples.diagnosticsCaption, "Diagnostic rows (Example)");
   assert.match(renderDialogHtml(interval), /Diagnostic rows \(Example\)/);
   assert.match(renderDialogHtml(interval), /Example pipeline step/);
@@ -190,7 +190,7 @@ test("boards 3 to 6 keep the gate command, the top-level verdict, and the run-lo
   assert.match(misses.samples.pipeline, /3 of 20/);
   assert.match(misses.samples.pipeline, /3\/20/);
   assert.match(misses.samples.pipeline, /more than 1\/20/);
-  assert.equal(misses.samples.resultsCaption, "Gate JSON (Example)");
+  assert.equal(misses.samples.resultsCaption, "Gate JSON excerpt, rounded for display");
   const dialog = renderDialogHtml(misses);
   assert.match(dialog, /Example pipeline step/);
   assert.match(dialog, /timeout=3 counts infrastructure timeouts \(environment misses\), not agent timeouts\. Agent timeouts count as task failures\./);
@@ -236,6 +236,11 @@ test("captured boards keep the real logs, and every board uses harness", () => {
 
   const source = read("js/scenarios-data.js");
   assert.doesNotMatch(source, /python -m harness/);
+  assert.doesNotMatch(source, /\/agent\/repos/);
+  assert.doesNotMatch(source, /\/tmp\//);
+  assert.match(logs.samples.commands, /# merge step: live_spend_rows\.restore\(\) called in-process with two local logs \(no GitHub call\)/);
+  assert.match(logs.samples.results, /GH_TOKEN: \$\{\{ github\.token \}\}/);
+  assert.equal(spend.cardNote, "The next live rollout doesn't start.");
   for (const id of ["prove-install", "cheap-pull-requests", "spend-cap", "two-spend-logs"]) {
     assert.equal(board(id).sampleLabel, "Captured output");
     assert.equal(board(id).sampleExample, false);

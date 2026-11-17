@@ -15,25 +15,23 @@ export const SAMPLE_TABS = [
   { id: "results", label: "Results excerpt" },
 ];
 
-const BOARD_1_COMMANDS = `python3 -m venv /tmp/anubys-build
-/tmp/anubys-build/bin/python -m pip install "build==1.3.0"
-cd /agent/repos/ci-agent-regression-harness
-/tmp/anubys-build/bin/python -m build --outdir /tmp/anubys-dist
+const BOARD_1_COMMANDS = `python3 -m venv .anubys-build
+.anubys-build/bin/python -m pip install "build==1.3.0"
+python -m build --outdir dist
 
-python3 -m venv /tmp/anubys-prove
-/tmp/anubys-prove/bin/python -m pip install --require-hashes -r requirements.lock
-/tmp/anubys-prove/bin/python -m pip install --no-deps /tmp/anubys-dist/anubys-0.0.1-py3-none-any.whl
+python3 -m venv .anubys-prove
+.anubys-prove/bin/python -m pip install --require-hashes -r requirements.lock
+.anubys-prove/bin/python -m pip install --no-deps dist/anubys-0.0.1-py3-none-any.whl
 
-export PATH="/tmp/anubys-prove/bin:\${PATH}"
+export PATH=".anubys-prove/bin:\${PATH}"
 export HOME=<user>
-cd /tmp/anubys-work
 SUITE="$(python -c 'from harness.bundled import suite_dir; print(suite_dir())')"
 CASSETTES="$(python -c 'from harness.bundled import cassette_dir; print(cassette_dir())')"
 
 env -u GEMINI_API_KEY harness run "$SUITE" \\
   --model <model-version> \\
   --mode live \\
-  --out /tmp/anubys-work/runs/dry-run \\
+  --out runs/dry-run \\
   --limit 1 \\
   --rollouts 1 \\
   --ceiling 1 \\
@@ -64,7 +62,7 @@ Exit code: 0`;
 const BOARD_1_RESULTS = `env -u GEMINI_API_KEY harness run "$SUITE" \\
   --model <model-version> \\
   --mode replay \\
-  --out /tmp/anubys-work/runs/replay \\
+  --out runs/replay \\
   --cassettes "$CASSETTES" \\
   --limit 1 \\
   --rollouts 1
@@ -72,13 +70,13 @@ const BOARD_1_RESULTS = `env -u GEMINI_API_KEY harness run "$SUITE" \\
 run_id=2026-11-17-tau_retail-808efd12 date=2026-11-17 git_sha=unknown model=<model-version> mode=replay
 outcomes pass=1 fail=0 env_miss=0 timeout=0 error=0
 total_cost_usd=0 cached_input_tokens=0 p50_s=0.01178385299999718 max_s=0.01178385299999718
-wrote /tmp/anubys-work/runs/replay/run_summary.json
+wrote runs/replay/run_summary.json
 Exit code: 0`;
 
 const BOARD_2_COMMANDS = `env -u GEMINI_API_KEY harness run "$SUITE" \\
   --model <model-version> \\
   --mode replay \\
-  --out /tmp/anubys-work/runs/would-record \\
+  --out runs/would-record \\
   --cassettes "$CASSETTES" \\
   --record \\
   --limit 1 \\
@@ -97,25 +95,25 @@ if [ -n "\${CASSETTES//[[:space:]]/}" ]; then
   fi
 fi`;
 
-const BOARD_3_COMMANDS = `harness convert-tau-retail --split test --index 66 --out /tmp/retail-drafts
-harness validate /tmp/retail-drafts
+const BOARD_3_COMMANDS = `harness convert-tau-retail --split test --index 66 --out retail-drafts
+harness validate retail-drafts
 # rewrite the user text and initial state, set provenance, set owner
-harness validate --write-hashes /tmp/retail-drafts
-harness gates /tmp/retail-drafts`;
+harness validate --write-hashes retail-drafts
+harness gates retail-drafts`;
 
-const BOARD_3_OUTPUT = `$ harness convert-tau-retail --split test --index 66 --out /tmp/retail-drafts
+const BOARD_3_OUTPUT = `$ harness convert-tau-retail --split test --index 66 --out retail-drafts
 tau_retail.test.066.v1.yaml  allowed  cancel  4-7  sha256:d70cdae6...
-wrote 1 scenario(s) to /tmp/retail-drafts
+wrote 1 scenario(s) to retail-drafts
 
-$ harness validate /tmp/retail-drafts
+$ harness validate retail-drafts
 ok 1 scenario(s), 0 suite file(s)`;
 
-const BOARD_3_CHECKS = `$ harness validate /tmp/retail-drafts
-/tmp/retail-drafts/tau_retail.test.066.v1.yaml: gate_eligible: gate_eligible must be false for a straight τ-bench conversion. Rewrite the wording and state, set provenance.method to rewritten, then set gate_eligible.
+const BOARD_3_CHECKS = `$ harness validate retail-drafts
+retail-drafts/tau_retail.test.066.v1.yaml: gate_eligible: gate_eligible must be false for a straight τ-bench conversion. Rewrite the wording and state, set provenance.method to rewritten, then set gate_eligible.
 1 error(s) in 1 file(s); 1 scenario(s) parsed
 exit code: 1
 
-$ harness gates /tmp/retail-drafts
+$ harness gates retail-drafts
 schema: pass (1 scenario(s), 0 suite file(s))
 synthetic-pii: pass (1 scenario(s), 0 cassette file(s))
 secrets: pass (python scanner; gitleaks not installed, trufflehog not installed; 1 file(s))
@@ -318,19 +316,16 @@ const BOARD_6_RESULTS = `{
   ]
 }`;
 
-const BOARD_7_COMMANDS = `cd /agent/repos/ci-agent-regression-harness
-/tmp/anubys-prove/bin/python scripts/check_monthly_spend.py \\
-  --log /tmp/spend-under.jsonl --threshold 38
+const BOARD_7_COMMANDS = `python scripts/check_monthly_spend.py \\
+  --log spend-under.jsonl --threshold 38
 
-/tmp/anubys-prove/bin/python scripts/check_monthly_spend.py \\
-  --log /tmp/spend-under.jsonl \\
+python scripts/check_monthly_spend.py \\
+  --log spend-under.jsonl \\
   --threshold 38 \\
   --ceiling 1 \\
   --runs 1
 
-env -u GEMINI_API_KEY HOME=<user> \\
-  /tmp/anubys-prove/bin/harness validate \\
-  /agent/repos/ci-agent-regression-harness/suites/tau_retail/examples`;
+harness validate suites/tau_retail/examples`;
 
 const BOARD_7_OUTPUT = `2026-11 logged spend is $37.50, under the $38 cap.
 Exit code: 0
@@ -348,9 +343,9 @@ Exit code: 0
 ok 1 scenario(s), 1 suite file(s)
 Exit code: 0`;
 
-const BOARD_8_COMMANDS = `/tmp/anubys-prove/bin/python \\
-  /agent/repos/ci-agent-regression-harness/scripts/check_monthly_spend.py \\
-  --log /tmp/anubys-two-machines/machine-a.jsonl \\
+const BOARD_8_COMMANDS = `# merge step: live_spend_rows.restore() called in-process with two local logs (no GitHub call)
+python scripts/check_monthly_spend.py \\
+  --log machine-a.jsonl \\
   --threshold 38 \\
   --month 2026-11`;
 
@@ -372,7 +367,7 @@ checkout_root None
 - name: Restore prior live spend
   if: success() && inputs.mode == 'live'
   env:
-    GH_TOKEN: <token>
+    GH_TOKEN: \${{ github.token }}
     GITHUB_REPOSITORY: \${{ github.repository }}
     GITHUB_RUN_ID: \${{ github.run_id }}
   run: |
@@ -403,7 +398,7 @@ export const SCENARIOS = [
     situation: "Captured on Python 3.12 with GEMINI_API_KEY unset. No model call was made. The dry run writes the plan and exits. The output directory is not created. Replay reads the cassette shipped in the wheel.",
     steps: [
       "Install the built wheel `anubys-0.0.1` in a fresh environment.",
-      "Print a live plan with `harness run` and `--dry-run`. Exit code 0. `/tmp/anubys-work/runs/dry-run` was not created.",
+      "Print a live plan with `harness run` and `--dry-run`. Exit code 0. `runs/dry-run` was not created.",
       "Replay the bundled cassette. Exit code 0. `total_cost_usd=0`. The line `pass=1` is a rollout outcome, not a suite verdict.",
     ],
     verdict: {
@@ -412,7 +407,7 @@ export const SCENARIOS = [
       exit: null,
       why: "These commands do not produce a suite verdict. Install, dry run, and replay each exit 0. The installed wheel is anubys-0.0.1. `git_sha=unknown` is the wheel running outside a checkout.",
     },
-    callouts: ["Wheel anubys-0.0.1. SUITE resolved to /tmp/anubys-prove/lib/python3.12/site-packages/harness/bundled/quickstart."],
+    callouts: ["Wheel anubys-0.0.1. SUITE resolved to the bundled quickstart shipped in the wheel."],
     samples: {
       commands: BOARD_1_COMMANDS,
       output: BOARD_1_OUTPUT,
@@ -569,7 +564,7 @@ export const SCENARIOS = [
       output: BOARD_5_OUTPUT,
       pipeline: BOARD_5_PIPELINE,
       results: BOARD_5_RESULTS,
-      resultsCaption: "Gate JSON (Example)",
+      resultsCaption: "Gate JSON excerpt, rounded for display",
       diagnostics: BOARD_5_DIAGNOSTICS,
       diagnosticsCaption: "Diagnostic rows (Example)",
     },
@@ -617,7 +612,7 @@ export const SCENARIOS = [
       output: BOARD_6_OUTPUT,
       pipeline: BOARD_6_PIPELINE,
       results: BOARD_6_RESULTS,
-      resultsCaption: "Gate JSON (Example)",
+      resultsCaption: "Gate JSON excerpt, rounded for display",
     },
   },
   {
@@ -625,7 +620,7 @@ export const SCENARIOS = [
     index: "07",
     title: "Spend is at the cap",
     hook: "The next live rollout doesn't start. Replay and validate still run.",
-    cardNote: "The pre-check does not add an error: prefix.",
+    cardNote: "The next live rollout doesn't start.",
     sampleLabel: "Captured output",
     sampleExample: false,
     placeholder: false,
