@@ -282,9 +282,9 @@ test("every route avoids the retired gate phrases", () => {
 });
 
 test("the method section markup carries the cards and both audiences", () => {
-  const html = fs.readFileSync(path.join(root, "method/index.html"), "utf8");
+  const html = fs.readFileSync(path.join(root, "how-it-works/index.html"), "utf8");
   const start = html.indexOf('id="method"');
-  const end = html.indexOf("</main>");
+  const end = html.indexOf('id="gate"', start);
   assert.ok(start > 0 && end > start);
   const method = html.slice(start, end);
   assert.match(method, /aria-describedby="flow-card-/);

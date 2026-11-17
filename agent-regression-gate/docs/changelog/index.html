@@ -6,9 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Changelog · Anubys</title>
   <meta name="description" content="What changed on the site, including the docs and the Planned label for data residency.">
-  <link rel="canonical" href="https://anubys.dev/docs/changelog/">
+  <meta http-equiv="refresh" content="0; url=../../about/#changelog">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://anubys.dev/about/#changelog">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://anubys.dev/docs/changelog/">
+  <meta property="og:url" content="https://anubys.dev/about/#changelog">
   <meta property="og:title" content="Anubys">
   <meta property="og:description" content="Anubys, a CI-native agent regression model harness.">
   <meta property="og:image" content="https://anubys.dev/og.png">
@@ -22,6 +24,15 @@
   <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../../css/site.css">
   <script>document.documentElement.classList.add("js");</script>
+<script>
+(function () {
+  var base = "../../about/";
+  var fallback = "changelog";
+  var raw = location.hash.replace(/^#/, "");
+  var id = raw || fallback;
+  location.replace(base + "#" + id);
+})();
+</script>
 </head>
 <body>
   <a class="skip" href="#content">Skip to main content</a>
@@ -37,60 +48,21 @@
       <nav id="nav-menu" class="nav-links" aria-label="Primary">
         <a href="../../">Product</a>
         <a href="../../how-it-works/">How it works</a>
-        <a href="../../method/">Method</a>
-        <a href="../../gate/">Gate</a>
-        <a href="../../results/">Results</a>
-        <a href="../../performance/">Performance</a>
-        <a href="../../integrations/">Integrations</a>
-        <a href="../" aria-current="page">Docs</a>
         <a href="../../scenarios/">Scenarios</a>
-        <a href="../../use-cases/">Use cases</a>
-        <a href="../getting-started/">Guide</a>
+        <a href="../../results/">Results</a>
+        <a href="../" aria-current="page">Docs</a>
         <a href="../../about/">About</a>
       </nav>
     </div>
   </header>
   <main id="content">
-    <div class="docs-shell">
-      <div class="docs-tools">
-        <form class="docs-search" role="search" action="./">
-          <label for="docs-q">Search headings</label>
-          <input id="docs-q" type="search" name="q" placeholder="Filter headings" autocomplete="off" aria-controls="docs-hits" aria-expanded="false">
-        </form>
-        <p class="docs-hit-status" id="docs-hit-status" role="status" aria-live="polite"></p>
-        <ul class="docs-hits" id="docs-hits" hidden></ul>
-        <details class="docs-menu">
-          <summary>Documentation</summary>
-          <nav class="docs-nav" aria-label="Documentation">
-            <p class="docs-group">Start</p><a href="../">Introduction</a><a href="../getting-started/">Getting started</a><a href="../quickstart/">Quickstart</a><a href="../install/">Install</a><a href="../concepts/">Concepts</a><p class="docs-group">Guides</p><a href="../guides/scenarios/">Writing scenarios</a><a href="../guides/adapters/">Adding a provider adapter</a><a href="../guides/spend/">Spend governance</a><p class="docs-group">Reference</p><a href="../reference/results/">results.json</a><a href="../reference/adapter/">Adapter contract</a><a href="../reference/ci/">CI and OIDC</a><a href="../reference/data/">Where results go</a><p class="docs-group">Project</p><a href="./" aria-current="page">Changelog</a><a href="../roadmap/">Roadmap</a><p class="docs-group">Site</p><a href="../dns-setup/">DNS setup</a>
-          </nav>
-        </details>
+    <section class="section">
+      <div class="wrap">
+        <p class="kicker">Moved</p>
+        <h1>This page has moved.</h1>
+        <p><a href="../../about/#changelog">About, Changelog</a></p>
       </div>
-      <article class="docs-article">
-        <header class="docs-head">
-          <p class="kicker">Project</p>
-          <h1>Changelog</h1>
-          <p class="docs-lede">Site notes. Product labels match the roadmap: Built, Next, and Planned.</p>
-        </header>
-        <nav class="docs-toc" aria-labelledby="on-this-page">
-          <p class="docs-toc-label" id="on-this-page">On this page</p>
-          <ol><li><a href="#copy-nov-12">12 November 2026</a></li><li><a href="#copy-nov-9">9 November 2026</a></li><li><a href="#sync-63f2ba2">30 October 2026</a></li><li><a href="#sync-8bb1633">19 October 2026</a></li><li><a href="#sync-134af48">18 October 2026</a></li><li><a href="#example-results">16 October 2026</a></li><li><a href="#performance-day">15 October 2026</a></li><li><a href="#october">13 October 2026</a></li><li><a href="#earlier">Earlier on this site</a></li></ol>
-        </nav>
-        <div class="docs-body">
-          <section class="docs-sec" id="copy-nov-12" aria-labelledby="copy-nov-12-title"><h2 id="copy-nov-12-title">12 November 2026</h2><ul><li>Copy now matches the November 12 scope cuts.</li><li>v0.1 does not compute a derived cost per verdict. Spend is logged per run, measured from the A/A and Block runs.</li><li>Likely regression is a spec flag, not computed in v0.1 (deferred to v0.2). It stays in the spec and the schema.</li><li>v0.1 writes <code>run_summary.json</code> plus a CLI summary. CI is a README workflow snippet. The packaged GitHub Action, per-family breakdown, harness export-replay, a second model provider, an HTML report, and the company AWS account move are deferred to v0.2, post-v0.1.</li><li>A 750 second Gemini retry cap is an infrastructure miss, not a regression. Too many misses make the run invalid.</li></ul></section>
-          <section class="docs-sec" id="copy-nov-9" aria-labelledby="copy-nov-9-title"><h2 id="copy-nov-9-title">9 November 2026</h2><ul><li>Copy now matches the November 9 plan.</li><li>Milestone B is November 19. Verdict computation on real runs is still a spec. <code>harness run</code> writes <code>run_summary.json</code>, not a verdict.</li><li>The packaged GitHub Action and a second provider (OpenAI or Anthropic) are planned for v0.2, after the November 30 release.</li><li>PyPI v0.1 is planned for November 20 to 24. Not on PyPI yet. A company AWS account is after the November 30 release.</li><li>Cost runs are scheduled November 10 to 12. No live experiment has run yet. Per-family breakdown and harness export-replay are Planned for v0.2. A planted regression on a real check targets November 17.</li><li>The harness enforces step and token caps: <code>max_steps</code> and <code>max_tokens</code> per rollout, a 180 second timeout on each model call, and a 750 second cap on Gemini retries. That retry cap is an infrastructure miss, not a regression. Too many misses make the run invalid.</li><li>The live-experiments environment deploys from main only. The repo owner starts each paid run by hand with Run workflow. A live run needs <code>HOME</code> set. The per-user spend log lives at <code>~/.anubys/spend_log.jsonl</code>.</li><li>Run summary schema 1.0.0 is published beside 1.1.0. Works with lists Gemini today, OpenAI and Claude for v0.2, GitHub, and OpenTelemetry as Planned post-MVP.</li></ul></section>
-          <section class="docs-sec" id="sync-63f2ba2" aria-labelledby="sync-63f2ba2-title"><h2 id="sync-63f2ba2-title">30 October 2026</h2><ul><li>Copy now matches harness main 63f2ba2.</li><li>Run summary schema 1.1.0 is copied byte for byte. It adds <code>model_version</code>. The results panel reads 1.1.0 and still reads 1.0.0. Before this change it rejected a summary written by harness main.</li><li>A live run checks the model version Gemini reports against <code>config/model_versions.txt</code> before the first paid call, and refuses on a mismatch.</li><li>Gemini retries are capped, and the spend log is created exclusively so two runs cannot both start a new log.</li><li>The October 23 and October 29 roadmap items missed their targets. No live experiment has run yet. They stay Next, without a new date.</li></ul></section>
-          <section class="docs-sec" id="sync-8bb1633" aria-labelledby="sync-8bb1633-title"><h2 id="sync-8bb1633-title">19 October 2026</h2><ul><li>Copy now matches harness main 8bb1633.</li><li>A live rollout that goes over its dollar ceiling (<code>spend_ceiling</code>) counts as an error, a failed rollout in the pass rate, not an environment miss. A rollout that already ended as an infrastructure miss stays a miss.</li><li>Outside a checkout, the live spend log is <code>~/.anubys/spend_log.jsonl</code>, one per user per machine, with no override.</li><li><code>schema/run_summary.schema.json</code> is now the harness schema, byte for byte. Dollar amounts in <code>run_summary.json</code> are decimal strings.</li></ul></section>
-          <section class="docs-sec" id="sync-134af48" aria-labelledby="sync-134af48-title"><h2 id="sync-134af48-title">18 October 2026</h2><ul><li>Copy now matches harness main. <code>harness run</code> is live, replay, and dry run. It writes <code>run_summary.json</code>, not a verdict.</li><li>Cassette replay is Built. The Gemini adapter is Built. This site reads results schema 2.1.0, and still reads 1 and 2.0.0.</li><li>The monthly spend check stops new live rollouts at <span class="example-tag">Example</span> $38. A run already in progress can finish.</li><li>Private beta. MIT license planned. Not on PyPI yet.</li></ul></section>
-          <section class="docs-sec" id="example-results" aria-labelledby="example-results-title"><h2 id="example-results-title">16 October 2026</h2><ul><li>The bundled results sample matches harness schema 2.1.0. Model ids are recorded at verdicts.overall.model_ids and baseline_pool_model_id. Diagnostics include example.clean.v1 (family example.clean) and example.broken.v1 (family example.broken).</li><li>The results panel reads a run summary from a separate example file, schema_version 1.0.0. That file is not a field of results.json. It shows planned rollouts, completed rollouts, infrastructure misses, cached input tokens, total cost, and rollout duration p50 and max.</li><li>schema/step.schema.json matches the harness Step contract. thinking_tokens and cached_tokens are optional and may be null.</li></ul></section>
-          <section class="docs-sec" id="performance-day" aria-labelledby="performance-day-title"><h2 id="performance-day-title">15 October 2026</h2><ul><li>The landing page has a Zero latency in production section. More details opens the performance page.</li><li>Anubys runs as a CI check when a pull request opens and adds 0 ms to production model responses.</li><li>Example efficiency figures render from data/timing.sample.json.</li><li>Cassette replay is labeled Landing with harness #14. It is not merged yet. Integrations and spend call it In review.</li><li>The model id is not final. Pages name a pinned Gemini Flash-Lite model id (lives in config/allowed_models.txt and is passed with --model).</li><li>The install guide is at docs/install/. It is labeled beta testing. Offline checks use the harness README commands. A full local gate stays Coming soon.</li></ul></section>
-          <section class="docs-sec" id="october" aria-labelledby="october-title"><h2 id="october-title">13 October 2026</h2><ul><li>Docs for the introduction, the quickstart, concepts, guides, and reference.</li><li>The landing page gained a Why Anubys comparison and an enterprise strip.</li><li>The roadmap is labeled Built, Next, and Planned.</li><li>Data stays in your cloud is Planned, because results go to an S3 bucket the team controls. Bring-your-own bucket is post-MVP.</li></ul></section>
-<section class="docs-sec" id="earlier" aria-labelledby="earlier-title"><h2 id="earlier-title">Earlier on this site</h2><ul><li>The page reads results schema 1, 2.0.0, and 2.1.0. The Wk4 fields are in progress.</li><li>The gate rule on the site is non-inferiority, δ = 5 pp, at a 90% interval.</li><li>The reference adapter is a pinned Gemini Flash-Lite model id (lives in config/allowed_models.txt and is passed with --model): one adapter and an allowlist entry.</li></ul></section>
-        </div>
-        <nav class="docs-pager" aria-label="Previous and next"><a class="docs-prev" href="../reference/data/"><span>Previous</span><b>Where results go</b></a><a class="docs-next" href="../roadmap/"><span>Next</span><b>Roadmap</b></a></nav>
-      </article>
-    </div>
-  </main>
+    </section></main>
   <footer class="footer">
     <div class="wrap footer-grid">
       <div>
@@ -100,18 +72,28 @@
       <nav aria-label="Pages">
         <p>Product</p>
         <a href="../../">Overview</a>
-        <a href="../../how-it-works/">How it works</a>
-        <a href="../../method/">Method</a>
-        <a href="../../gate/">Gate</a>
+        <p>How it works</p>
+        <a href="../../how-it-works/">Film</a>
+        <a href="../../how-it-works/#method">Method</a>
+        <a href="../../how-it-works/#gate">Gate</a>
+        <a href="../../how-it-works/#exit-codes">Exit codes</a>
+        <p>Scenarios</p>
+        <a href="../../scenarios/">Boards</a>
+        <a href="../../scenarios/#use-cases">Use cases</a>
+        <p>Results</p>
         <a href="../../results/">Results</a>
-        <a href="../../performance/">Performance</a>
-        <a href="../../integrations/">Integrations</a>
+        <a href="../../results/#performance">Performance</a>
+        <p>Docs</p>
         <a href="../">Docs</a>
+        <a href="../getting-started/">Getting started</a>
         <a href="../install/">Install</a>
-        <a href="../getting-started/">Guide</a>
-        <a href="../../scenarios/">Scenarios</a>
-        <a href="../../use-cases/">Use cases</a>
+        <a href="../quickstart/">Quickstart</a>
+        <p>About</p>
         <a href="../../about/">About</a>
+        <a href="../../about/#roadmap">Roadmap</a>
+        <a href="../../about/#changelog">Changelog</a>
+        <a href="../../about/#integrations">Integrations</a>
+        <a href="../../about/#support">Support</a>
       </nav>
       <nav aria-label="Elsewhere">
         <p>Contact</p>

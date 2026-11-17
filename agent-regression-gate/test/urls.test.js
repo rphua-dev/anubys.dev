@@ -27,8 +27,19 @@ function attr(html, pattern) {
   return match[1];
 }
 
+const REDIRECTS = {
+  "method/index.html": "https://anubys.dev/how-it-works/#method",
+  "gate/index.html": "https://anubys.dev/how-it-works/#gate",
+  "performance/index.html": "https://anubys.dev/results/#performance",
+  "use-cases/index.html": "https://anubys.dev/scenarios/#use-cases",
+  "integrations/index.html": "https://anubys.dev/about/#integrations",
+  "docs/roadmap/index.html": "https://anubys.dev/about/#roadmap",
+  "docs/changelog/index.html": "https://anubys.dev/about/#changelog",
+};
+
 function pageCanonical(file) {
   const rel = path.relative(site, file).split(path.sep).join("/");
+  if (REDIRECTS[rel]) return REDIRECTS[rel];
   const route = rel === "index.html" ? "" : rel.replace(/index\.html$/, "");
   return new URL(route, ORIGIN).href;
 }
@@ -113,6 +124,7 @@ test("published pages and docs drop the old absolute site URLs", () => {
     const text = fs.readFileSync(file, "utf8");
     assert.deepEqual(retiredAbsoluteSiteUrls(text), [], name);
     for (const raw of text.match(/https?:\/\/[^\s"'<>)]+/g) || []) {
+      if (raw === "http://www.sitemaps.org/schemas/sitemap/0.9") continue;
       assert.equal(raw.startsWith(ORIGIN), true, `${name} ${raw}`);
     }
   }

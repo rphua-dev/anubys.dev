@@ -288,17 +288,20 @@ test("scenarios data and the rendered page do not name a Gemini model version", 
 });
 
 test("new scenario files and rendered boards stay clear of banned copy", () => {
-  const files = ["js/scenarios-data.js", "js/scenarios.js", "scenarios/index.html"];
+  const files = ["js/scenarios-data.js", "js/scenarios.js"];
   for (const rel of files) assertBanned(read(rel), rel);
+  const boards = read("scenarios/index.html").split('id="use-cases"')[0];
+  assertBanned(boards, "scenarios/index.html");
   for (const item of SCENARIOS) {
     assertBanned(renderDialogHtml(item), item.id);
     assertBanned(renderGridHtml([item]), `${item.id} card`);
   }
   assertBanned(renderTeaserHtml(), "teaser");
   const page = read("scenarios/index.html");
+  const boardsOnly = page.split('id="use-cases"')[0];
   assert.match(page, /Eight situations you will hit running Anubys, and what each verdict tells you\./);
-  assert.doesNotMatch(page, /placeholder/i);
-  assert.doesNotMatch(page, /data file/i);
+  assert.doesNotMatch(boardsOnly, /placeholder/i);
+  assert.doesNotMatch(boardsOnly, /data file/i);
   assert.match(page, /id="scenarios-root"/);
   assert.match(page, /id="scenarios-dialog"/);
   assert.match(page, /role="dialog"/);

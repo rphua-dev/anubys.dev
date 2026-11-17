@@ -183,7 +183,8 @@ test("hover previews a step, and a click pins it", () => {
 });
 
 test("gate and results copy match the pooled gap and the sample sentence", () => {
-  const gate = read("gate/index.html");
+  const gatePage = read("how-it-works/index.html");
+  const gate = gatePage.slice(gatePage.indexOf('id="gate"'), gatePage.indexOf('id="exit-codes"'));
   const results = read("results/index.html");
   const pooled = "Rollouts are pooled across scenarios within each arm, and the gap is candidate pass rate minus baseline pass rate.";
   assert.ok(gate.includes(pooled));

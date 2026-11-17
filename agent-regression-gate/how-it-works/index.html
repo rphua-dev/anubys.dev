@@ -37,21 +37,16 @@
       <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-menu">Menu</button>
       <nav id="nav-menu" class="nav-links" aria-label="Primary">
         <a href="../">Product</a>
-        <a href="../how-it-works/" aria-current="page">How it works</a>
-        <a href="../method/">Method</a>
-        <a href="../gate/">Gate</a>
-        <a href="../results/">Results</a>
-        <a href="../performance/">Performance</a>
-        <a href="../integrations/">Integrations</a>
-        <a href="../docs/">Docs</a>
+        <a href="./" aria-current="page">How it works</a>
         <a href="../scenarios/">Scenarios</a>
-        <a href="../use-cases/">Use cases</a>
-        <a href="../docs/getting-started/">Guide</a>
+        <a href="../results/">Results</a>
+        <a href="../docs/">Docs</a>
         <a href="../about/">About</a>
       </nav>
     </div>
   </header>
   <main id="content">
+
     <section class="section" id="how" aria-labelledby="how-title">
       <div class="wrap">
         <div class="reveal">
@@ -62,7 +57,299 @@
         <div id="how-root"></div>
       </div>
     </section>
-  </main>
+  
+    <section class="section stats-block" id="stats" aria-labelledby="stats-title">
+      <div class="wrap">
+        <p class="kicker">The check</p>
+        <h2 id="stats-title">Method, the gate rule, and exit codes.</h2>
+        <nav class="page-subnav" aria-label="On this page">
+          <a href="#method">Method</a>
+          <a href="#gate">Gate</a>
+          <a href="#exit-codes">Exit codes</a>
+        </nav>
+      </div>
+      
+      
+    <section class="section reveal" id="method">
+      <div class="wrap">
+        <p class="kicker">Method</p>
+        <h2>Same scenarios. Both versions. One check.</h2>
+        <p class="fine">Gate spec. The rules are fixed. Computing them on real runs lands with Milestone B (target November 19). Today <code>harness run</code> runs rollouts and writes <code>run_summary.json</code> plus a CLI summary, not a verdict.</p>
+        <p class="section-intro">The job runs in CI, after the change is built and before it merges. Hover a step, focus it, or tap it for a plain-language read.</p>
+        <figure class="flow" data-step="0">
+          <figcaption class="sr-only">Pipeline from hashed scenarios, through a CI runner, into baseline and candidate rollouts, a scorer, and one suite check. Each step opens an explanation. Escape closes it.</figcaption>
+          <div class="flow-board">
+            <svg class="flow-svg" aria-hidden="true" focusable="false">
+              <path class="draw" pathLength="1"></path>
+              <path class="draw" pathLength="1"></path>
+              <path class="draw" pathLength="1"></path>
+              <path class="draw" pathLength="1"></path>
+              <path class="draw" pathLength="1"></path>
+              <path class="draw" pathLength="1"></path>
+            </svg>
+            <div class="flow-step-wrap" data-step-id="scenarios" data-node="n1" style="--i:0">
+              <button type="button" class="flow-step" aria-describedby="flow-card-scenarios">
+                <span class="flow-index" aria-hidden="true">01</span>
+                <span class="flow-title">Scenarios</span>
+                <span class="flow-sub">Content hash</span>
+              </button>
+              <div class="flow-card" id="flow-card-scenarios" role="tooltip">
+                <svg class="flow-ig" viewBox="0 0 280 46" aria-hidden="true" focusable="false">
+                  <rect x="1" y="7" width="34" height="32" rx="4" fill="none" stroke="#f4f4f5" stroke-width="1.25"/>
+                  <path d="M8 16h20M8 22h16M8 28h12" stroke="#d4d4dc" stroke-width="1.25"/>
+                  <rect x="70" y="7" width="34" height="32" rx="4" fill="none" stroke="#f4f4f5" stroke-width="1.25"/>
+                  <path d="M77 16h20M77 22h16M77 28h12" stroke="#d4d4dc" stroke-width="1.25"/>
+                  <path d="M40 23h26" stroke="#ff7a1a" stroke-width="1.5"/>
+                  <text x="116" y="20" fill="#d4d4dc" font-family="ui-monospace,monospace" font-size="12">SHA-256</text>
+                  <text x="116" y="36" fill="#ff7a1a" font-family="ui-monospace,monospace" font-size="12">same hash</text>
+                </svg>
+                <p class="flow-plain">Both versions face the same tasks. The tasks are locked in before the run starts, so neither side gets an easier set.</p>
+                <p class="flow-tech">Each scenario is sealed with a SHA-256 content hash.</p>
+              </div>
+            </div>
+            <div class="flow-step-wrap" data-step-id="runner" data-node="n2" style="--i:1">
+              <button type="button" class="flow-step" aria-describedby="flow-card-runner">
+                <span class="flow-index" aria-hidden="true">02</span>
+                <span class="flow-title">CI runner</span>
+                <span class="flow-sub">One job</span>
+              </button>
+              <div class="flow-card" id="flow-card-runner" role="tooltip">
+                <svg class="flow-ig" viewBox="0 0 280 46" aria-hidden="true" focusable="false">
+                  <rect x="1" y="10" width="78" height="26" rx="6" fill="none" stroke="#f4f4f5" stroke-width="1.25"/>
+                  <text x="40" y="27" text-anchor="middle" fill="#f4f4f5" font-family="ui-monospace,monospace" font-size="12">one job</text>
+                  <path d="M84 23h22" stroke="#ff7a1a" stroke-width="1.5"/>
+                  <path d="M106 23C120 23 120 12 136 12" fill="none" stroke="#ff7a1a" stroke-width="1.5"/>
+                  <path d="M106 23C120 23 120 34 136 34" fill="none" stroke="#ff7a1a" stroke-width="1.5"/>
+                  <text x="144" y="16" fill="#d4d4dc" font-family="ui-monospace,monospace" font-size="12">baseline</text>
+                  <text x="144" y="38" fill="#d4d4dc" font-family="ui-monospace,monospace" font-size="12">candidate</text>
+                </svg>
+                <p class="flow-plain">After the build, one job in your existing CI runs the suite on both versions before the change merges.</p>
+                <p class="flow-tech">One job runs both arms and can fail the check.</p>
+              </div>
+            </div>
+            <div class="flow-step-wrap" data-step-id="baseline" data-node="n3" data-pop="down" style="--i:2">
+              <button type="button" class="flow-step" aria-describedby="flow-card-baseline">
+                <span class="flow-index" aria-hidden="true">03</span>
+                <span class="flow-title">Baseline</span>
+                <span class="flow-sub">Repeated rollouts</span>
+              </button>
+              <div class="flow-card" id="flow-card-baseline" role="tooltip">
+                <svg class="flow-ig" viewBox="0 0 280 46" aria-hidden="true" focusable="false">
+                  <g fill="#f4f4f5">
+                    <rect x="0" y="16" width="11" height="11" rx="1"/>
+                    <rect x="16" y="16" width="11" height="11" rx="1"/>
+                    <rect x="32" y="16" width="11" height="11" rx="1"/>
+                    <rect x="48" y="16" width="11" height="11" rx="1"/>
+                    <rect x="64" y="16" width="11" height="11" rx="1"/>
+                    <rect x="80" y="16" width="11" height="11" rx="1"/>
+                    <rect x="96" y="16" width="11" height="11" rx="1"/>
+                  </g>
+                  <rect x="112" y="16" width="11" height="11" rx="1" fill="none" stroke="#ff7a1a" stroke-width="1.25"/>
+                  <text x="136" y="27" fill="#ff7a1a" font-family="ui-monospace,monospace" font-size="13">per arm</text>
+                </svg>
+                <p class="flow-plain">The agent customers already have is tried many times, so today's behavior is a stable picture instead of one lucky answer.</p>
+                <p class="flow-tech">Repeated rollouts per arm. Agent timeouts score 0. Infrastructure is excluded.</p>
+              </div>
+            </div>
+            <div class="flow-step-wrap" data-step-id="candidate" data-node="n3" style="--i:3">
+              <button type="button" class="flow-step" aria-describedby="flow-card-candidate">
+                <span class="flow-index" aria-hidden="true">04</span>
+                <span class="flow-title">Candidate</span>
+                <span class="flow-sub">Repeated rollouts</span>
+              </button>
+              <div class="flow-card" id="flow-card-candidate" role="tooltip">
+                <svg class="flow-ig" viewBox="0 0 280 46" aria-hidden="true" focusable="false">
+                  <rect x="0" y="16" width="11" height="11" rx="1" fill="#f4f4f5"/>
+                  <rect x="16" y="16" width="11" height="11" rx="1" fill="#ff7a1a"/>
+                  <rect x="32" y="16" width="11" height="11" rx="1" fill="#f4f4f5"/>
+                  <rect x="48" y="16" width="11" height="11" rx="1" fill="none" stroke="#ff7a1a" stroke-width="1.25"/>
+                  <rect x="64" y="16" width="11" height="11" rx="1" fill="#f4f4f5"/>
+                  <text x="88" y="27" fill="#ff7a1a" font-family="ui-monospace,monospace" font-size="13">per arm</text>
+                </svg>
+                <p class="flow-plain">The new version is tried on those same tasks, so you can see whether it still completes them.</p>
+                <p class="flow-tech">Repeated rollouts per arm. Each scenario still counts once.</p>
+              </div>
+            </div>
+            <div class="flow-step-wrap" data-step-id="scorer" data-node="n4" style="--i:4">
+              <button type="button" class="flow-step" aria-describedby="flow-card-scorer">
+                <span class="flow-index" aria-hidden="true">05</span>
+                <span class="flow-title">Scorer</span>
+                <span class="flow-sub">90% interval</span>
+              </button>
+              <div class="flow-card" id="flow-card-scorer" role="tooltip">
+                <svg class="flow-ig" viewBox="0 0 280 46" aria-hidden="true" focusable="false">
+                  <line x1="4" y1="30" x2="168" y2="30" stroke="#d4d4dc" stroke-width="1"/>
+                  <line x1="104" y1="22" x2="104" y2="38" stroke="#f4f4f5" stroke-width="1.25"/>
+                  <text x="104" y="16" text-anchor="middle" fill="#d4d4dc" font-family="ui-monospace,monospace" font-size="11">0</text>
+                  <rect x="22" y="26" width="76" height="8" rx="4" fill="#ff7a1a"/>
+                  <text x="180" y="33" fill="#ff7a1a" font-family="ui-monospace,monospace" font-size="13">90%</text>
+                </svg>
+                <p class="flow-plain">For each task, the harness compares how often the two versions pass, then checks whether the gap is real.</p>
+                <p class="flow-tech">Pass rates are paired by scenario. The gap gets a 90% interval.</p>
+              </div>
+            </div>
+            <div class="flow-step-wrap" data-step-id="suite" data-node="n5" style="--i:5">
+              <button type="button" class="flow-step" aria-describedby="flow-card-suite">
+                <span class="flow-index" aria-hidden="true">06</span>
+                <span class="flow-title">Suite check</span>
+                <span class="flow-sub">One status</span>
+              </button>
+              <div class="flow-card" id="flow-card-suite" role="tooltip">
+                <svg class="flow-ig" viewBox="0 0 280 72" aria-hidden="true" focusable="false">
+                  <circle cx="6" cy="8" r="2.5" fill="#f4f4f5"/>
+                  <text x="16" y="11" fill="#d4d4dc" font-family="ui-monospace,monospace" font-size="11">Pass</text>
+                  <circle cx="6" cy="22" r="2.5" fill="#ff7a1a"/>
+                  <text x="16" y="25" fill="#ff7a1a" font-family="ui-monospace,monospace" font-size="11">Block</text>
+                  <circle cx="6" cy="36" r="2.5" fill="#f4f4f5"/>
+                  <text x="16" y="39" fill="#f4f4f5" font-family="ui-monospace,monospace" font-size="11">Insufficient evidence</text>
+                  <text x="16" y="52" fill="#ff7a1a" font-family="ui-monospace,monospace" font-size="14">warning · Likely regression</text>
+                  <circle cx="6" cy="64" r="2.5" fill="none" stroke="#d4d4dc" stroke-width="1.25" stroke-dasharray="1.6 1.4"/>
+                  <text x="16" y="67" fill="#d4d4dc" font-family="ui-monospace,monospace" font-size="11">Invalid run</text>
+                </svg>
+                <p class="flow-plain">You get one suite answer: Pass, Block, Insufficient evidence, or Invalid run. Insufficient evidence can carry a Likely regression warning. Likely regression is a spec flag, not computed in v0.1 (deferred to v0.2).</p>
+                <p class="flow-tech">Pass if the 90% interval's lower bound is above −5 pp, block if its upper bound is below −5 pp, otherwise insufficient evidence; an invalid run isn't scored.</p>
+              </div>
+            </div>
+          </div>
+        </figure>
+        <div class="use-cases">
+          <p class="kicker">Use cases</p>
+          <div class="use-grid">
+            <article class="use-card" style="--i:0">
+              <h3>For founders and teams new to AI</h3>
+              <p>An AI agent can change its behavior between versions even when the screens around it look the same. Moving from Gemini Flash-Lite to a newer Flash, a prompt edit, or a new tool can make yesterday's request fail today.</p>
+              <p>This check runs the version you are about to ship against the one customers already have, on the same tasks, and flags a drop larger than 5 points when the evidence is clear, and says when it can't tell yet. The check is provider-agnostic: Gemini comes first, and OpenAI and Anthropic are on the roadmap.</p>
+            </article>
+            <article class="use-card" style="--i:1">
+              <h3>For ML and platform engineers</h3>
+              <ul>
+                <li>CI gate on the candidate versus the agent already in production.</li>
+                <li>Repeated rollouts, so one noisy try becomes a pass rate.</li>
+                <li>Non-inferiority, δ = 5 pp. Pass if the 90% interval's lower bound is above −5 pp, block if its upper bound is below −5 pp, otherwise insufficient evidence; an invalid run isn't scored.</li>
+                <li>Invalid-run detection when too many rollouts are missing or broken by infrastructure.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+  
+      <div id="gate">
+        
+        
+    <section class="section reveal" aria-labelledby="spec-title">
+      <div class="wrap">
+        <p class="kicker">Specification</p>
+        <h2 id="spec-title">The decision rules.</h2>
+        <p class="fine">Gate spec. The rules are fixed. Computing them on real runs lands with Milestone B (target November 19). Today <code>harness run</code> runs rollouts and writes <code>run_summary.json</code> plus a CLI summary, not a verdict.</p>
+        <p class="section-intro">A <span class="term"><button type="button" aria-expanded="false" aria-controls="tip-rollout" aria-describedby="tip-rollout">rollout</button><span class="term-tip" id="tip-rollout" role="tooltip">One execution of one scenario. A pass scores 1. A fail scores 0.</span></span> is one execution. Pass is 1. Fail is 0. The status applies to the suite. Repeated rollouts per arm. Scenarios are SHA-256 hashes.</p>
+        <!-- brand: body gate decision intro -->
+        <p class="section-intro">Compare a candidate agent with the one already in production, on the same scenarios. Anubys returns one suite status at 90% confidence: Pass, Block, Insufficient evidence, or Invalid run. Insufficient evidence can carry a <span class="term"><button type="button" aria-expanded="false" aria-controls="tip-regression" aria-describedby="tip-regression">Likely regression</button><span class="term-tip" id="tip-regression" role="tooltip">A spec flag on insufficient evidence, not a separate status, and not computed in v0.1 (deferred to v0.2). Pass if the 90% interval's lower bound is above −5 pp. Block if its upper bound is below −5 pp. An invalid run isn't scored. Scenarios are diagnostics, not individual gates.</span></span> warning.</p>
+        <div class="spec-grid">
+          <article class="spec"><b>90<span>%</span></b><p>Confidence. Non-inferiority, δ = 5 pp. Pass when the lower bound is above −5 pp. Block when the upper bound is below −5 pp.</p></article>
+          <article class="spec"><b>5<span>%</span></b><p>Miss cap. Above this on either arm, the run is invalid. Exactly 5% still scores.</p></article>
+          <article class="spec"><b>0.6</b><p>Coverage floor. Each scenario needs at least ceil(0.6 × scheduled) usable rollouts on both arms.</p></article>
+          <article class="spec"><b class="spec-word">Pooled</b><p>Rollouts are pooled across scenarios within each arm, and the gap is candidate pass rate minus baseline pass rate.</p></article>
+        </div>
+        
+      </div>
+    </section>
+    <section class="section trust-section" id="trust">
+      <div class="trust-stage" data-step="0">
+        <div class="trust-pin">
+          <div class="wrap trust-layout">
+            <div class="trust-copy">
+              <p class="kicker">Gate behavior</p>
+              <h2>No verdict when the run cannot support one.</h2>
+              <ol class="trust-list">
+                <li>
+                  <h3>Pooled comparison</h3>
+                  <p>Rollouts are pooled across scenarios within each arm, and the gap is candidate pass rate minus baseline pass rate.</p>
+                  <p class="annotation">candidate pass rate minus baseline pass rate</p>
+                  <div class="tvis" aria-hidden="true">
+                    <p class="tvis-kicker">Gap</p>
+                    <p class="tvis-eq"><span>candidate</span> − <span>baseline</span></p>
+                    <p class="tvis-row"><span>Baseline arm</span><b>Pooled</b></p>
+                    <p class="tvis-row"><span>Candidate arm</span><b>Pooled</b></p>
+                    <p class="tvis-foot">one gap for the suite</p>
+                  </div>
+                </li>
+                <li>
+                  <h3>Timeout policy</h3>
+                  <p>A loop or an exhausted step budget scores 0 and stays in the sample. Provider 5xx, rate limits, and a killed CI runner are excluded from the score and counted toward the miss cap. A rollout that goes over its dollar ceiling (<code>spend_ceiling</code>) counts as an error: a failed rollout in the pass rate, scored 0. A rollout that already ended as an infrastructure miss stays a miss.</p>
+                  <p class="annotation">agent timeout → 0 · infrastructure timeout → excluded</p>
+                  <div class="tvis" aria-hidden="true">
+                    <p class="tvis-kicker">Outcome</p>
+                    <p class="tvis-row"><span>Step budget</span><b>Score 0</b></p>
+                    <p class="tvis-row"><span>Provider 5xx</span><b>Excluded</b></p>
+                    <p class="tvis-row"><span>Rate limit</span><b>Excluded</b></p>
+                    <p class="tvis-row"><span>Runner killed</span><b>Excluded</b></p>
+                    <p class="tvis-row"><span>spend_ceiling</span><b>Score 0</b></p>
+                  </div>
+                </li>
+                <li>
+                  <h3>Validity</h3>
+                  <p>More than 5% of scheduled rollouts missing or infrastructure-broken, on either arm, invalidates the run. Exactly 5% remains valid. Each scenario also has a coverage floor on both arms. A response model version that is missing or doesn't match the expected one invalidates the run. An arm with zero counted rollouts invalidates the run. Baseline and candidate that don't cover the same scenarios are Bad input, exit 2, and are not an Invalid run.</p>
+                  <p class="annotation">5 → 3 usable · 7 → 5 · 20 → 12 · 6% on one arm → invalid</p>
+                  <div class="tvis" aria-hidden="true">
+                    <p class="tvis-kicker">Miss rate</p>
+                    <p class="tvis-row"><span>Exactly 5%</span><b>Valid</b></p>
+                    <div class="tvis-meter"><i style="width:25%"></i><em></em></div>
+                    <p class="tvis-row"><span>6% on one arm</span><b>Invalid</b></p>
+                    <div class="tvis-meter is-over"><i style="width:30%"></i><em></em></div>
+                  </div>
+                </li>
+                <li>
+                  <h3>Content hashes</h3>
+                  <p>Each scenario is hashed. <code>harness validate</code> checks that hash before a run. A mismatch fails that step (exit 1). The gate reads outcome files and does not treat a hash mismatch as an Invalid run.</p>
+                  <p class="annotation">SHA-256, checked before a run</p>
+                  <div class="tvis" aria-hidden="true">
+                    <p class="tvis-kicker">SHA-256</p>
+                    <p class="tvis-hash">cbb85ce6…0ebed1</p>
+                    <p class="tvis-row"><span>harness validate</span><b>Exit 1</b></p>
+                    <p class="tvis-foot">Checked before a run</p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="section" id="gate-faq" aria-labelledby="gate-faq-title">
+      <div class="wrap">
+        <p class="kicker">FAQ</p>
+        <h2 id="gate-faq-title">Operational questions.</h2>
+        <div class="faq-list">
+          <!-- brand: body gate FAQ summary -->
+          <details><summary>What does Anubys decide?</summary><p>Whether a candidate agent regressed relative to the one already running, before the change ships. The output is one suite status: Pass, Block, Insufficient evidence, or Invalid run. Scenarios are diagnostics, not individual gates.</p></details>
+          <details><summary>What is a rollout?</summary><p>One execution of one scenario. Pass scores 1. Fail scores 0. Scenarios are repeated because a single execution is not a stable estimate.</p></details>
+          <details><summary>Why repeated rollouts?</summary><p>Repeated rollouts per arm. Rollouts are pooled across scenarios within each arm, and the gap is candidate pass rate minus baseline pass rate.</p></details>
+          <details><summary>What does 90% confidence mean here?</summary><p>Non-inferiority, δ = 5 pp. Pass if the 90% interval's lower bound is above −5 pp. Block if its upper bound is below −5 pp. Otherwise the result is insufficient evidence, which can carry a Likely regression warning. Likely regression is a spec flag, not computed in v0.1 (deferred to v0.2). An invalid run isn't scored.</p></details>
+          <details><summary>When is a run invalid?</summary><p>When more than 5% of scheduled rollouts on either arm are missing or broken by infrastructure. Exactly 5% is still scored. Each scenario also needs at least 60% of its scheduled rollouts usable, rounded up. A response model version that is missing or doesn't match the expected one invalidates the run. An arm with zero counted rollouts invalidates the run. Baseline and candidate that don't cover the same scenarios are Bad input, exit 2, and are not an Invalid run.</p></details>
+          <details><summary>Does a timeout count as a failure?</summary><p>A loop or an exhausted step budget scores 0. A provider error, a rate limit, or a killed CI runner is excluded and counts toward the 5% miss cap.</p></details>
+        </div>
+      </div>
+    </section>
+  
+      </div>
+      
+    <section class="section" id="exit-codes" aria-labelledby="exit-codes-title">
+      <div class="wrap">
+        <h2 id="exit-codes-title">Exit codes.</h2>
+        <p>Only Pass exits 0. Exit codes 1, 3, and 4 all fail the CI job by default. Block is the only verdict that says the candidate is clearly worse.</p>
+        <dl class="run-exits">
+          <div><dt>Pass</dt><dd>0</dd></div>
+          <div><dt>Block</dt><dd>1</dd></div>
+          <div><dt>Bad input</dt><dd>2</dd></div>
+          <div><dt>Insufficient evidence</dt><dd>3</dd></div>
+          <div><dt>Invalid run</dt><dd>4</dd></div>
+        </dl>
+        <p>Bad input is an exit code for bad flags, a missing run directory, or baseline and candidate that don't cover the same scenarios. A scenario mismatch exits 2 and is not an Invalid run. It is not a verdict.</p>
+        <p id="pending-aa"><span class="example-tag">Example</span> rates and intervals on this site are illustrative, pending real A/A and Block results.</p>
+      </div>
+    </section>
+    </section></main>
   <footer class="footer">
     <div class="wrap footer-grid">
       <div>
@@ -72,18 +359,28 @@
       <nav aria-label="Pages">
         <p>Product</p>
         <a href="../">Overview</a>
-        <a href="../how-it-works/">How it works</a>
-        <a href="../method/">Method</a>
-        <a href="../gate/">Gate</a>
+        <p>How it works</p>
+        <a href="./">Film</a>
+        <a href="./#method">Method</a>
+        <a href="./#gate">Gate</a>
+        <a href="./#exit-codes">Exit codes</a>
+        <p>Scenarios</p>
+        <a href="../scenarios/">Boards</a>
+        <a href="../scenarios/#use-cases">Use cases</a>
+        <p>Results</p>
         <a href="../results/">Results</a>
-        <a href="../performance/">Performance</a>
-        <a href="../integrations/">Integrations</a>
+        <a href="../results/#performance">Performance</a>
+        <p>Docs</p>
         <a href="../docs/">Docs</a>
+        <a href="../docs/getting-started/">Getting started</a>
         <a href="../docs/install/">Install</a>
-        <a href="../docs/getting-started/">Guide</a>
-        <a href="../scenarios/">Scenarios</a>
-        <a href="../use-cases/">Use cases</a>
+        <a href="../docs/quickstart/">Quickstart</a>
+        <p>About</p>
         <a href="../about/">About</a>
+        <a href="../about/#roadmap">Roadmap</a>
+        <a href="../about/#changelog">Changelog</a>
+        <a href="../about/#integrations">Integrations</a>
+        <a href="../about/#support">Support</a>
       </nav>
       <nav aria-label="Elsewhere">
         <p>Contact</p>

@@ -219,7 +219,7 @@ test("rendered results and site copy never show a count out of 20", () => {
 test("new results copy keeps the site rules", () => {
   const resultsPage = readFileSync(new URL("../results/index.html", import.meta.url), "utf8");
   const intro = resultsPage.slice(resultsPage.indexOf('id="results"'), resultsPage.indexOf('id="demo"'));
-  const changelog = readFileSync(new URL("../docs/changelog/index.html", import.meta.url), "utf8");
+  const changelog = readFileSync(new URL("../about/index.html", import.meta.url), "utf8");
   const section = changelog.slice(changelog.indexOf('id="example-results"'), changelog.indexOf('id="performance-day"'));
   const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
   rejectCopy(intro, "results page");

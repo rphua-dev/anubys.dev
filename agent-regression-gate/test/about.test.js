@@ -34,9 +34,9 @@ test("the about route exists and is in the primary nav and footer", () => {
   const html = fs.readFileSync(page, "utf8");
   assert.match(html, /https:\/\/anubys\.dev\/about\//);
   const nav = sliceNav(html, 'aria-label="Primary"');
-  assert.match(nav, /href="\.\.\/about\/" aria-current="page">About<\/a>/);
+  assert.match(nav, /href="\.\/" aria-current="page">About<\/a>/);
   const footer = html.slice(html.indexOf("<footer"), html.indexOf("</footer>"));
-  assert.match(footer, /href="\.\.\/about\/">About<\/a>/);
+  assert.match(footer, /href="\.\/">About<\/a>/);
 
   for (const file of htmlFiles(root)) {
     const source = fs.readFileSync(file, "utf8");

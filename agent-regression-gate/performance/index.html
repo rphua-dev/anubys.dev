@@ -6,9 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Performance · Anubys</title>
   <meta name="description" content="Anubys runs as a CI check and adds 0 ms to production model responses.">
-  <link rel="canonical" href="https://anubys.dev/performance/">
+  <meta http-equiv="refresh" content="0; url=../results/#performance">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://anubys.dev/results/#performance">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://anubys.dev/performance/">
+  <meta property="og:url" content="https://anubys.dev/results/#performance">
   <meta property="og:title" content="Anubys">
   <meta property="og:description" content="Anubys, a CI-native agent regression model harness.">
   <meta property="og:image" content="https://anubys.dev/og.png">
@@ -22,6 +24,15 @@
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../css/site.css">
   <script>document.documentElement.classList.add("js");</script>
+<script>
+(function () {
+  var base = "../results/";
+  var fallback = "performance";
+  var raw = location.hash.replace(/^#/, "");
+  var id = raw || fallback;
+  location.replace(base + "#" + id);
+})();
+</script>
 </head>
 <body>
   <a class="skip" href="#content">Skip to main content</a>
@@ -37,118 +48,21 @@
       <nav id="nav-menu" class="nav-links" aria-label="Primary">
         <a href="../">Product</a>
         <a href="../how-it-works/">How it works</a>
-        <a href="../method/">Method</a>
-        <a href="../gate/">Gate</a>
-        <a href="../results/">Results</a>
-        <a href="../performance/" aria-current="page">Performance</a>
-        <a href="../integrations/">Integrations</a>
-        <a href="../docs/">Docs</a>
         <a href="../scenarios/">Scenarios</a>
-        <a href="../use-cases/">Use cases</a>
-        <a href="../docs/getting-started/">Guide</a>
+        <a href="../results/" aria-current="page">Results</a>
+        <a href="../docs/">Docs</a>
         <a href="../about/">About</a>
       </nav>
     </div>
   </header>
   <main id="content">
-    <section class="section v-section" id="latency" aria-labelledby="latency-title">
+    <section class="section">
       <div class="wrap">
-        <p class="kicker">Production</p>
-        <h1 id="latency-title">Zero latency in production.</h1>
-        <div class="path-compare">
-          <article class="path-card">
-            <p class="path-kicker">Runtime guardrail</p>
-            <ol class="path-flow">
-              <li><span class="path-node">User</span></li>
-              <li><span class="path-node">Guard</span></li>
-              <li><span class="path-node">Model</span></li>
-              <li><span class="path-node">Guard</span></li>
-              <li><span class="path-node">User</span></li>
-            </ol>
-            <p class="path-note">Latency on every request.</p>
-          </article>
-          <article class="path-card">
-            <p class="path-kicker">Anubys</p>
-            <div class="path-ci-block">
-              <p class="path-lane">CI check</p>
-              <ol class="path-flow path-flow-ci">
-                <li><span class="path-node">PR</span></li>
-                <li><span class="path-node path-node-gate"><b>CI gate</b><small>baseline vs candidate</small></span></li>
-                <li><span class="path-node">Merge</span></li>
-              </ol>
-            </div>
-            <p class="path-lane">Production</p>
-            <ol class="path-flow">
-              <li><span class="path-node">User</span></li>
-              <li><span class="path-node">Model</span></li>
-              <li><span class="path-node">User</span></li>
-            </ol>
-            <p class="path-note">Untouched.</p>
-          </article>
-        </div>
-        <p class="path-legend"><i aria-hidden="true"></i>Orange marks the Anubys CI path.</p>
-        <p class="v-line">Anubys never sits in the live request path. It runs as a CI check when a PR opens, so it adds 0 ms to production model responses. The cost is time on the PR check.</p>
+        <p class="kicker">Moved</p>
+        <h1>This page has moved.</h1>
+        <p><a href="../results/#performance">Results, Performance</a></p>
       </div>
-    </section>
-
-    <section class="section v-section" id="mitigations" aria-labelledby="mitigations-title">
-      <div class="wrap">
-        <p class="kicker">Built today</p>
-        <h2 id="mitigations-title">What keeps the check from lingering.</h2>
-        <ul class="mitigations">
-          <li>
-            <h3>Step and token caps</h3>
-            <p>Each rollout enforces <code>max_steps</code> and <code>max_tokens</code>. Each model call times out at 180 seconds. Gemini retries are capped at 750 seconds. Hitting that cap is an infrastructure miss, not a regression. Too many misses make the run invalid.</p>
-          </li>
-          <li>
-            <h3>Monthly spend check</h3>
-            <p>The <span class="example-tag">Example</span> $38 check stops new live rollouts. A run already in progress can finish.</p>
-          </li>
-          <li>
-            <h3>Cassette replay <span class="ship-tag">Built</span></h3>
-            <p>Re-runs reuse recorded model calls. No API waits. No spend. The key is a hash of each model request. You record with --record first. No sample recording ships.</p>
-          </li>
-          <li>
-            <h3>No servers or proxies</h3>
-            <p>Runs on GitHub's runners, then exits.</p>
-          </li>
-          <li>
-            <h3>Pinned model ids</h3>
-            <p>Direct provider calls. No extra hop.</p>
-          </li>
-        </ul>
-      </div>
-    </section>
-
-    <section class="section v-section" id="tradeoff" aria-labelledby="tradeoff-title">
-      <div class="wrap">
-        <p class="kicker">Tradeoff</p>
-        <h2 id="tradeoff-title">Rollouts per arm.</h2>
-        <p class="v-line">Rollouts per arm is the overhead knob. More rollouts catch smaller drops, a smaller MDE, and a longer check.</p>
-        <div class="knob" aria-hidden="true">
-          <span>Fewer rollouts</span>
-          <span class="knob-track"></span>
-          <span>More rollouts</span>
-        </div>
-        <p class="knob-read">Fewer rollouts can miss a smaller drop. More rollouts catch that drop and hold the pull request longer.</p>
-      </div>
-    </section>
-
-    <section class="section v-section" id="efficiency" aria-labelledby="efficiency-title">
-      <div class="wrap">
-        <div class="timing-head">
-          <p class="kicker">Efficiency</p>
-          <h2 id="efficiency-title">Example check times.</h2>
-          <span class="example-tag">Example</span>
-        </div>
-        <p class="v-line">Measured check times come from the November 10 to 12 cost runs. No per-family verdict.</p>
-        <div id="timing-root" data-timing="data/timing.sample.json" aria-live="polite">
-          <p class="timing-missing">Loading the example timing field.</p>
-        </div>
-        <p class="fine">Read from <a href="../data/timing.sample.json">data/timing.sample.json</a>. The same shape can arrive later as a timing field on the results file. A file without that field leaves this panel empty.</p>
-      </div>
-    </section>
-  </main>
+    </section></main>
   <footer class="footer">
     <div class="wrap footer-grid">
       <div>
@@ -158,18 +72,28 @@
       <nav aria-label="Pages">
         <p>Product</p>
         <a href="../">Overview</a>
-        <a href="../how-it-works/">How it works</a>
-        <a href="../method/">Method</a>
-        <a href="../gate/">Gate</a>
+        <p>How it works</p>
+        <a href="../how-it-works/">Film</a>
+        <a href="../how-it-works/#method">Method</a>
+        <a href="../how-it-works/#gate">Gate</a>
+        <a href="../how-it-works/#exit-codes">Exit codes</a>
+        <p>Scenarios</p>
+        <a href="../scenarios/">Boards</a>
+        <a href="../scenarios/#use-cases">Use cases</a>
+        <p>Results</p>
         <a href="../results/">Results</a>
-        <a href="../performance/">Performance</a>
-        <a href="../integrations/">Integrations</a>
+        <a href="../results/#performance">Performance</a>
+        <p>Docs</p>
         <a href="../docs/">Docs</a>
+        <a href="../docs/getting-started/">Getting started</a>
         <a href="../docs/install/">Install</a>
-        <a href="../docs/getting-started/">Guide</a>
-        <a href="../scenarios/">Scenarios</a>
-        <a href="../use-cases/">Use cases</a>
+        <a href="../docs/quickstart/">Quickstart</a>
+        <p>About</p>
         <a href="../about/">About</a>
+        <a href="../about/#roadmap">Roadmap</a>
+        <a href="../about/#changelog">Changelog</a>
+        <a href="../about/#integrations">Integrations</a>
+        <a href="../about/#support">Support</a>
       </nav>
       <nav aria-label="Elsewhere">
         <p>Contact</p>

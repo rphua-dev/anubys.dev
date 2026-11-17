@@ -39,7 +39,11 @@ test("docs search keeps relative hrefs and filters headings", () => {
 });
 
 test("every docs page has a sidebar, search, on-this-page list, and pager", () => {
-  const files = docsHtml();
+  const files = docsHtml().filter((file) => {
+    const rel = path.relative(root, file);
+    if (rel === path.join("docs", "dns-setup", "index.html")) return false;
+    return !fs.readFileSync(file, "utf8").includes('http-equiv="refresh"');
+  });
   assert.equal(files.length, DOCS_INDEX.length);
   for (const file of files) {
     const html = fs.readFileSync(file, "utf8");
@@ -171,7 +175,8 @@ test("data residency docs match the Planned strip", () => {
 });
 
 test("roadmap lanes are Built, Next, and Planned", () => {
-  const html = read("docs/roadmap/index.html");
+  const page = read("about/index.html");
+  const html = page.slice(page.indexOf('id="roadmap"'), page.indexOf('id="changelog"'));
   assert.match(html, /id="built"/);
   assert.match(html, /id="next"/);
   assert.match(html, /id="planned"/);
@@ -224,7 +229,7 @@ test("roadmap lanes are Built, Next, and Planned", () => {
   assert.match(html, /Data stays in your cloud is Planned, and post-MVP/);
   assert.match(html, /README CI workflow snippet/);
   assert.match(html, /HTML report/);
-  const changelog = read("docs/changelog/index.html");
+  const changelog = page.slice(page.indexOf('id="changelog"'), page.indexOf('id="integrations"'));
   assert.doesNotMatch(changelog, /12826ff/);
   assert.match(changelog, /the November 9 plan/);
   assert.match(changelog, /id="copy-nov-12"/);
@@ -248,7 +253,9 @@ test("dns setup points anubys.dev at GitHub Pages and omits the verification val
   assert.match(html, /class="dns-flow"/);
   assert.match(html, /<strong>Browser<\/strong>/);
   assert.match(html, /DNS lookup at Squarespace/);
-  assert.match(html, /ryean0\/anubys/);
+  assert.match(html, /rphua-dev\/anubys\.dev/);
+  assert.doesNotMatch(html, /ryean0\/anubys/);
+  assert.match(html, /name="robots" content="noindex"/);
   assert.match(html, /HTTPS certificate/);
   for (const address of [
     "185.199.108.153",
@@ -286,22 +293,16 @@ test("dns setup points anubys.dev at GitHub Pages and omits the verification val
   assert.match(html, /dig anubys\.dev \+short/);
   assert.match(html, /dig www\.anubys\.dev CNAME \+short/);
   assert.match(html, /curl -I https:\/\/anubys\.dev/);
-  assert.match(html, /href="\.\.\/\.\.\/performance\/">Performance</);
+  assert.match(html, /href="\.\.\/\.\.\/results\/#performance">Performance</);
   assert.match(html, /class="wordmark"/);
   assert.match(html, /wordmark-name">Anubys</);
   assert.match(html, /wordmark-tld">\.dev</);
-  const page = DOCS_INDEX.find((item) => item.path === "dns-setup/");
-  assert.ok(page);
-  assert.equal(page.title, "DNS setup");
+  assert.equal(DOCS_INDEX.some((item) => item.path === "dns-setup/"), false);
   for (const file of docsHtml()) {
     const source = fs.readFileSync(file, "utf8");
     const label = path.relative(root, file);
-    assert.match(source, />DNS setup<\/a>/, label);
-    if (label !== path.join("docs", "dns-setup", "index.html")) {
-      assert.match(source, /href="[^"]*dns-setup\/"/, label);
-    }
+    if (label === path.join("docs", "dns-setup", "index.html")) continue;
+    assert.doesNotMatch(source, />DNS setup<\/a>/, label);
+    assert.doesNotMatch(source, /dns-setup\//, label);
   }
-  const roadmap = read("docs/roadmap/index.html");
-  assert.match(roadmap, /class="docs-next" href="\.\.\/dns-setup\/"/);
-  assert.match(html, /class="docs-prev" href="\.\.\/roadmap\/"/);
 });

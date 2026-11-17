@@ -127,7 +127,7 @@ test("install nav links resolve and the landing page offers Get started", () => 
     const label = path.relative(root, file);
     const footer = html.slice(html.indexOf("<footer"), html.indexOf("</footer>"));
     assert.match(footer, />Install<\/a>/, `${label} footer`);
-    if (label.startsWith(`docs${path.sep}`)) {
+    if (label.startsWith(`docs${path.sep}`) && !html.includes('http-equiv="refresh"')) {
       assert.match(html, /aria-label="Documentation"[\s\S]*?>Install<\/a>/, `${label} sidebar`);
     }
   }

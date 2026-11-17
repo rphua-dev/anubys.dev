@@ -38,15 +38,9 @@
       <nav id="nav-menu" class="nav-links" aria-label="Primary">
         <a href="../">Product</a>
         <a href="../how-it-works/">How it works</a>
-        <a href="../method/">Method</a>
-        <a href="../gate/">Gate</a>
-        <a href="../results/" aria-current="page">Results</a>
-        <a href="../performance/">Performance</a>
-        <a href="../integrations/">Integrations</a>
-        <a href="../docs/">Docs</a>
         <a href="../scenarios/">Scenarios</a>
-        <a href="../use-cases/">Use cases</a>
-        <a href="../docs/getting-started/">Guide</a>
+        <a href="./" aria-current="page">Results</a>
+        <a href="../docs/">Docs</a>
         <a href="../about/">About</a>
       </nav>
     </div>
@@ -56,6 +50,11 @@
       <div class="wrap">
         <p class="kicker">results.json</p>
         <h1>Recorded suite status.</h1>
+        <nav class="page-subnav" aria-label="On this page">
+          <a href="#results">Results</a>
+          <a href="#performance">Performance</a>
+          <a href="#metrics">Metrics</a>
+        </nav>
         <p class="fine">Gate spec. The rules are fixed. Computing them on real runs lands with Milestone B (target November 19). Today <code>harness run</code> runs rollouts and writes <code>run_summary.json</code> plus a CLI summary, not a verdict.</p>
         <p class="section-intro">This panel reads <code>data/results.preliminary.json</code>. Pass rates in that file are <span class="example-tag">Example</span> figures from the bundled sample. The check would fail on Block once the packaged Action ships. An invalid run isn't scored. Scenario rows are diagnostics.</p>
         <p>Schema 2.1.0 sets <code>schema_version</code> to <code>2.1.0</code>. Model ids are recorded at <code>verdicts.overall.model_ids</code> for the baseline and the candidate. <code>baseline_pool_model_id</code> names the pinned pool. <code>run_kind</code> is <code>screening</code>, <code>baseline</code>, <code>aa</code>, or <code>gate</code>. Screening, baseline, and aa share one model id across both arms. A gate run may use a different candidate id, and its baseline id must equal <code>baseline_pool_model_id</code>. The bundled diagnostics include <code>example.clean.v1</code> (family <code>example.clean</code>) and <code>example.broken.v1</code> (family <code>example.broken</code>). A run summary is a separate file with <code>schema_version</code> <code>1.1.0</code>, which adds <code>model_version</code>. This page still reads <code>1.0.0</code> summaries. The 1.0.0 contract is <a href="../schema/run_summary-1.0.0.schema.json">schema/run_summary-1.0.0.schema.json</a>. This page reads that example from <code>data/run_summary.example.json</code>. It is not a field of results.json. The page still reads results version 1 and 2.0.0, including a per-arm model id on those older files, and rejects any other major version. The results path is <code>data/results.preliminary.json</code>. promptfoo can also write a file named <code>results.json</code>. That file is a different contract.</p>
@@ -81,7 +80,116 @@
         </div>
       </div>
     </section>
-  </main>
+  
+    <div id="performance">
+      
+      
+    <section class="section v-section" id="latency" aria-labelledby="latency-title">
+      <div class="wrap">
+        <p class="kicker">Production</p>
+        <h2 id="latency-title">Zero latency in production.</h2>
+        <div class="path-compare">
+          <article class="path-card">
+            <p class="path-kicker">Runtime guardrail</p>
+            <ol class="path-flow">
+              <li><span class="path-node">User</span></li>
+              <li><span class="path-node">Guard</span></li>
+              <li><span class="path-node">Model</span></li>
+              <li><span class="path-node">Guard</span></li>
+              <li><span class="path-node">User</span></li>
+            </ol>
+            <p class="path-note">Latency on every request.</p>
+          </article>
+          <article class="path-card">
+            <p class="path-kicker">Anubys</p>
+            <div class="path-ci-block">
+              <p class="path-lane">CI check</p>
+              <ol class="path-flow path-flow-ci">
+                <li><span class="path-node">PR</span></li>
+                <li><span class="path-node path-node-gate"><b>CI gate</b><small>baseline vs candidate</small></span></li>
+                <li><span class="path-node">Merge</span></li>
+              </ol>
+            </div>
+            <p class="path-lane">Production</p>
+            <ol class="path-flow">
+              <li><span class="path-node">User</span></li>
+              <li><span class="path-node">Model</span></li>
+              <li><span class="path-node">User</span></li>
+            </ol>
+            <p class="path-note">Untouched.</p>
+          </article>
+        </div>
+        <p class="path-legend"><i aria-hidden="true"></i>Orange marks the Anubys CI path.</p>
+        <p class="v-line">Anubys never sits in the live request path. It runs as a CI check when a PR opens, so it adds 0 ms to production model responses. The cost is time on the PR check.</p>
+      </div>
+    </section>
+
+    <section class="section v-section" id="mitigations" aria-labelledby="mitigations-title">
+      <div class="wrap">
+        <p class="kicker">Built today</p>
+        <h2 id="mitigations-title">What keeps the check from lingering.</h2>
+        <ul class="mitigations">
+          <li>
+            <h3>Step and token caps</h3>
+            <p>Each rollout enforces <code>max_steps</code> and <code>max_tokens</code>. Each model call times out at 180 seconds. Gemini retries are capped at 750 seconds. Hitting that cap is an infrastructure miss, not a regression. Too many misses make the run invalid.</p>
+          </li>
+          <li>
+            <h3>Monthly spend check</h3>
+            <p>The <span class="example-tag">Example</span> $38 check stops new live rollouts. A run already in progress can finish.</p>
+          </li>
+          <li>
+            <h3>Cassette replay <span class="ship-tag">Built</span></h3>
+            <p>Re-runs reuse recorded model calls. No API waits. No spend. The key is a hash of each model request. You record with --record first. No sample recording ships.</p>
+          </li>
+          <li>
+            <h3>No servers or proxies</h3>
+            <p>Runs on GitHub's runners, then exits.</p>
+          </li>
+          <li>
+            <h3>Pinned model ids</h3>
+            <p>Direct provider calls. No extra hop.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section v-section" id="tradeoff" aria-labelledby="tradeoff-title">
+      <div class="wrap">
+        <p class="kicker">Tradeoff</p>
+        <h2 id="tradeoff-title">Rollouts per arm.</h2>
+        <p class="v-line">Rollouts per arm is the overhead knob. More rollouts catch smaller drops, a smaller MDE, and a longer check.</p>
+        <div class="knob" aria-hidden="true">
+          <span>Fewer rollouts</span>
+          <span class="knob-track"></span>
+          <span>More rollouts</span>
+        </div>
+        <p class="knob-read">Fewer rollouts can miss a smaller drop. More rollouts catch that drop and hold the pull request longer.</p>
+      </div>
+    </section>
+
+    <section class="section v-section" id="efficiency" aria-labelledby="efficiency-title">
+      <div class="wrap">
+        <div class="timing-head">
+          <p class="kicker">Efficiency</p>
+          <h2 id="efficiency-title">Example check times.</h2>
+          <span class="example-tag">Example</span>
+        </div>
+        <p class="v-line">Measured check times come from the November 10 to 12 cost runs. No per-family verdict.</p>
+        <div id="timing-root" data-timing="data/timing.sample.json" aria-live="polite">
+          <p class="timing-missing">Loading the example timing field.</p>
+        </div>
+        <p class="fine">Read from <a href="../data/timing.sample.json">data/timing.sample.json</a>. The same shape can arrive later as a timing field on the results file. A file without that field leaves this panel empty.</p>
+      </div>
+    </section>
+  
+    </div>
+    
+    <section class="section" id="metrics" aria-labelledby="metrics-title">
+      <div class="wrap">
+        <h2 id="metrics-title">Metrics</h2>
+        <p class="fine">Charts for these checks are reserved for a later update.</p>
+      </div>
+    </section></main>
   <footer class="footer">
     <div class="wrap footer-grid">
       <div>
@@ -91,18 +199,28 @@
       <nav aria-label="Pages">
         <p>Product</p>
         <a href="../">Overview</a>
-        <a href="../how-it-works/">How it works</a>
-        <a href="../method/">Method</a>
-        <a href="../gate/">Gate</a>
-        <a href="../results/">Results</a>
-        <a href="../performance/">Performance</a>
-        <a href="../integrations/">Integrations</a>
+        <p>How it works</p>
+        <a href="../how-it-works/">Film</a>
+        <a href="../how-it-works/#method">Method</a>
+        <a href="../how-it-works/#gate">Gate</a>
+        <a href="../how-it-works/#exit-codes">Exit codes</a>
+        <p>Scenarios</p>
+        <a href="../scenarios/">Boards</a>
+        <a href="../scenarios/#use-cases">Use cases</a>
+        <p>Results</p>
+        <a href="./">Results</a>
+        <a href="./#performance">Performance</a>
+        <p>Docs</p>
         <a href="../docs/">Docs</a>
+        <a href="../docs/getting-started/">Getting started</a>
         <a href="../docs/install/">Install</a>
-        <a href="../docs/getting-started/">Guide</a>
-        <a href="../scenarios/">Scenarios</a>
-        <a href="../use-cases/">Use cases</a>
+        <a href="../docs/quickstart/">Quickstart</a>
+        <p>About</p>
         <a href="../about/">About</a>
+        <a href="../about/#roadmap">Roadmap</a>
+        <a href="../about/#changelog">Changelog</a>
+        <a href="../about/#integrations">Integrations</a>
+        <a href="../about/#support">Support</a>
       </nav>
       <nav aria-label="Elsewhere">
         <p>Contact</p>

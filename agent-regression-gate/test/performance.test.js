@@ -40,8 +40,8 @@ test("the landing section compares a runtime guardrail with the CI path", () => 
   assert.match(latency, /Cassette replay <span class="ship-tag">Built<\/span>/);
   assert.doesNotMatch(latency, /harness #14/);
   assert.equal(latency.includes("Built today"), false);
-  assert.match(latency, /<a class="more" href="performance\/">More details<\/a>/);
-  assert.match(home, /<a href="performance\/">Performance<\/a>/);
+  assert.match(latency, /<a class="more" href="results\/#performance">More details<\/a>/);
+  assert.match(home, /<a href="results\/#performance">Performance<\/a>/);
   assert.equal(/p95/i.test(latency), false);
   assert.equal(/parallel/i.test(latency), false);
   const guardrail = latency.slice(latency.indexOf("Runtime guardrail"), latency.indexOf("Anubys</p>"));
@@ -49,10 +49,13 @@ test("the landing section compares a runtime guardrail with the CI path", () => 
 });
 
 test("the performance route states the built mitigations and the rollout tradeoff", () => {
-  const html = read("performance/index.html");
-  assert.match(html, /<link rel="canonical" href="https:\/\/anubys\.dev\/performance\/"/);
-  assert.match(html, /property="og:url" content="https:\/\/anubys\.dev\/performance\/"/);
-  assert.match(html, /href="\.\.\/performance\/" aria-current="page">Performance</);
+  const page = read("results/index.html");
+  const html = page.slice(page.indexOf('id="performance"'), page.indexOf('id="metrics"'));
+  const redirect = read("performance/index.html");
+  assert.match(redirect, /<link rel="canonical" href="https:\/\/anubys\.dev\/results\/#performance"/);
+  assert.match(redirect, /property="og:url" content="https:\/\/anubys\.dev\/results\/#performance"/);
+  assert.match(redirect, /href="\.\.\/results\/#performance"/);
+  assert.match(page, /href="\.\/" aria-current="page">Results</);
   assert.match(html, /Zero latency in production/);
   assert.match(html, /Anubys never sits in the live request path/);
   assert.match(html, /0 ms to production model responses/);
@@ -93,7 +96,8 @@ test("the performance route states the built mitigations and the rollout tradeof
   assert.doesNotMatch(html, /harness #14/);
   assert.doesNotMatch(html, /S3 upload/);
   const spend = read("docs/guides/spend/index.html");
-  const integrations = read("integrations/index.html");
+  const about = read("about/index.html");
+  const integrations = about.slice(about.indexOf('id="integrations"'), about.indexOf('id="support"'));
   assert.match(spend, /Cassette replay is Built/);
   assert.doesNotMatch(spend, /hard stop/i);
   assert.match(integrations, /Record\/replay cassettes · Built/);
@@ -105,7 +109,7 @@ test("the performance route states the built mitigations and the rollout tradeof
   assert.equal(/\.ship-tag\s*\{[^}]*#ff7a1a/.test(css), false);
   assert.equal(/p95/i.test(html), false);
   assert.equal(/parallel/i.test(html), false);
-  assert.equal(html.includes("https://anubys.dev/performance/\" >"), false);
+  assert.equal(page.includes("https://anubys.dev/performance/\" >"), false);
 });
 
 test("example timings render from the sample and ignore a missing field", () => {

@@ -96,7 +96,18 @@ function performanceTargetMissing(fromFile, ref) {
   return !fs.existsSync(index);
 }
 
+const REDIRECTS = {
+  "method/index.html": "https://anubys.dev/how-it-works/#method",
+  "gate/index.html": "https://anubys.dev/how-it-works/#gate",
+  "performance/index.html": "https://anubys.dev/results/#performance",
+  "use-cases/index.html": "https://anubys.dev/scenarios/#use-cases",
+  "integrations/index.html": "https://anubys.dev/about/#integrations",
+  "docs/roadmap/index.html": "https://anubys.dev/about/#roadmap",
+  "docs/changelog/index.html": "https://anubys.dev/about/#changelog",
+};
+
 function pageCanonical(rel) {
+  if (REDIRECTS[rel]) return REDIRECTS[rel];
   const route = rel === "index.html" ? "" : rel.replace(/index\.html$/, "");
   return new URL(route, ORIGIN).href;
 }
@@ -182,8 +193,14 @@ for (const rel of routes) {
   assert.match(html, /name="twitter:title" content="Anubys"/);
   assert.match(html, new RegExp(`property="og:description" content="${TAGLINE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
   assert.match(html, /class="brand-mark"/);
-  for (const label of ["Product", "How it works", "Method", "Gate", "Results", "Performance", "Integrations", "Docs", "About"]) {
-    assert.ok(html.includes(`>${label}</a>`), `${rel} nav ${label}`);
+  const primaryStart = html.indexOf('aria-label="Primary"');
+  const primary = html.slice(primaryStart, html.indexOf("</nav>", primaryStart));
+  const labels = [...primary.matchAll(/>([^<]+)<\/a>/g)].map((match) => match[1]);
+  assert.deepEqual(labels, ["Product", "How it works", "Scenarios", "Results", "Docs", "About"], `${rel} primary nav`);
+  if (REDIRECTS[rel]) {
+    assert.match(html, /http-equiv="refresh"/, `${rel} refresh`);
+    assert.match(html, /location\.replace/, `${rel} replace`);
+    assert.match(html, /name="robots" content="noindex"/, `${rel} noindex`);
   }
   const dataBase = attr(html, /data-base="([^"]*)"/);
   assert.equal(path.resolve(path.dirname(file), dataBase), site, `${rel} data-base`);
@@ -262,9 +279,16 @@ for (const name of ["sitemap.xml", "robots.txt"]) {
   if (!fs.existsSync(file)) continue;
   const text = fs.readFileSync(file, "utf8");
   assertNoRetiredAbsoluteSiteUrl(text, name);
+  assert.equal(text.includes("dns-setup"), false, `${name} lists dns-setup`);
+  assert.equal(text.includes("ryean0/anubys"), false, `${name} names the old repository`);
   for (const raw of text.match(/https?:\/\/[^\s"'<>)]+/g) || []) {
+    if (raw === "http://www.sitemaps.org/schemas/sitemap/0.9") continue;
     assert.equal(raw.startsWith(ORIGIN), true, `${name} absolute URL ${raw}`);
   }
+}
+const sitemap = fs.readFileSync(path.join(site, "sitemap.xml"), "utf8");
+for (const route of ["", "how-it-works/", "scenarios/", "results/", "docs/", "about/"]) {
+  assert.ok(sitemap.includes(`https://anubys.dev/${route}<`), route || "home");
 }
 
 const published = new Set(htmlFiles(site));
@@ -288,7 +312,8 @@ for (const file of published) {
 assert.match(fs.readFileSync(path.join(site, "css/site.css"), "utf8"), /#ff7a1a/);
 assert.match(fs.readFileSync(path.join(site, "css/site.css"), "utf8"), /\.scale-beam[\s\S]*prefers-reduced-motion:\s*reduce[\s\S]*\.scale-beam[\s\S]*animation:\s*none/);
 
-const integrations = fs.readFileSync(path.join(site, "integrations/index.html"), "utf8");
+const aboutPage = fs.readFileSync(path.join(site, "about/index.html"), "utf8");
+const integrations = aboutPage.slice(aboutPage.indexOf('id="integrations"'), aboutPage.indexOf('id="support"'));
 assert.match(integrations, /id="integrations"/);
 assert.match(integrations, /a pinned Gemini Flash-Lite model id \(lives in <code>config\/allowed_models\.txt<\/code> and is passed with <code>--model<\/code>\)/);
 assert.match(integrations, /Gemini is the only adapter today/);
