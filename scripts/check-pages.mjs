@@ -18,6 +18,7 @@ const routes = [
   "integrations/index.html",
   "about/index.html",
   "use-cases/index.html",
+  "scenarios/index.html",
   "docs/index.html",
   "docs/quickstart/index.html",
   "docs/getting-started/index.html",

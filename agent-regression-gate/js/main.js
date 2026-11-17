@@ -16,6 +16,7 @@ import { bindFilm, bindStory, renderFilmHtml, renderStoryHtml } from "./story.js
 import { bindWorkflow, renderWorkflowHtml } from "./workflow.js";
 import { METHOD_NOTES, armMissExceeds, formatPercent, formatPoints, formatSignedNumber, scoreRun } from "./verdict.js";
 import { renderFoundersHtml } from "./founders.js";
+import { bindScenarios, renderTeaserHtml } from "./scenarios.js";
 
 const LINKEDIN = "https://www.linkedin.com/in/rphua-dev";
 const SLOT_LABEL = {
@@ -896,6 +897,10 @@ if (workflowRoot) {
 initChrome();
 initCodeCopy();
 initOsTabs();
+const scenariosRoot = document.getElementById("scenarios-root");
+if (scenariosRoot) bindScenarios(scenariosRoot);
+const scenariosTeaser = document.getElementById("scenarios-teaser");
+if (scenariosTeaser) scenariosTeaser.innerHTML = renderTeaserHtml();
 if (document.getElementById("demo-root")) renderDemo();
 
 function loadJson(path) {
