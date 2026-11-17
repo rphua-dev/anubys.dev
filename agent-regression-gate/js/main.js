@@ -13,6 +13,7 @@ import {
 import { RESULTS_PATH, RUN_SUMMARY_PATH, parseResults, parseResultsV2, parseRunSummary, summaryRows } from "./results.js";
 import { TIMING_SAMPLE_PATH, readTiming, renderTimingHtml } from "./timing.js";
 import { bindFilm, bindStory, renderFilmHtml, renderStoryHtml } from "./story.js";
+import { bindWorkflow, renderWorkflowHtml } from "./workflow.js";
 import { METHOD_NOTES, armMissExceeds, formatPercent, formatPoints, formatSignedNumber, scoreRun } from "./verdict.js";
 import { renderFoundersHtml } from "./founders.js";
 
@@ -884,6 +885,12 @@ const filmRoot = document.getElementById("film-root");
 if (filmRoot) {
   filmRoot.innerHTML = renderFilmHtml();
   bindFilm(filmRoot);
+}
+
+const workflowRoot = document.getElementById("workflow-root");
+if (workflowRoot) {
+  workflowRoot.innerHTML = renderWorkflowHtml();
+  bindWorkflow(workflowRoot);
 }
 
 initChrome();

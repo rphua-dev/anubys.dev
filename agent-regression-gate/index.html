@@ -131,6 +131,26 @@
       </div>
     </section>
 
+    <section class="section v-section" id="workflow" aria-labelledby="workflow-title">
+      <div class="wrap">
+        <p class="kicker">Workflow</p>
+        <h2 id="workflow-title">Where the harness sits.</h2>
+        <p class="v-line">A developer opens a pull request. CI runs the harness from a README workflow snippet. One verdict comes back, and the merge is allowed or blocked.</p>
+        <p class="spec-line"><span class="spec-badge">Spec</span> The rules are fixed. Computing them on real runs lands with Milestone B (November 19). Today <code>harness run</code> runs rollouts and writes <code>run_summary.json</code> plus a CLI summary, not a verdict.</p>
+        <div id="workflow-root">
+          <ol class="workflow-fallback">
+            <li>Pull request</li>
+            <li>CI job</li>
+            <li>Rollouts</li>
+            <li>Stats gate</li>
+            <li>Verdict</li>
+            <li>Merge</li>
+          </ol>
+        </div>
+        <a class="more" href="docs/reference/ci/">More details</a>
+      </div>
+    </section>
+
     <section class="section v-section" id="why" aria-labelledby="why-title">
       <div class="wrap">
         <p class="kicker">Why Anubys</p>
