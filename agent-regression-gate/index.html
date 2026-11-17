@@ -135,7 +135,7 @@
       <div class="wrap">
         <p class="kicker">Workflow</p>
         <h2 id="workflow-title">Where the harness sits.</h2>
-        <p class="v-line">A developer opens a pull request. CI runs the harness from a README workflow snippet. One verdict comes back, and the merge is allowed or blocked.</p>
+        <p class="v-line">A developer opens a pull request. CI runs the harness from a README workflow snippet. Only Pass exits 0. Exit codes 1, 3, and 4 all fail the CI job.</p>
         <p class="spec-line"><span class="spec-badge">Spec</span> The rules are fixed. Computing them on real runs lands with Milestone B (November 19). Today <code>harness run</code> runs rollouts and writes <code>run_summary.json</code> plus a CLI summary, not a verdict.</p>
         <div id="workflow-root">
           <ol class="workflow-fallback">
