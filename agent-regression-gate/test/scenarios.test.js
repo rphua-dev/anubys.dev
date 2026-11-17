@@ -51,8 +51,9 @@ function assertBanned(text, label) {
   assert.doesNotMatch(text, /results\.json/, `${label} results.json`);
   assert.doesNotMatch(text, /runner exits 0/i, `${label} runner exits 0`);
   assert.doesNotMatch(text, /preliminary/i, `${label} preliminary`);
-  assert.doesNotMatch(text, /\/20(?!\d)/, `${label} n/20`);
-  assert.doesNotMatch(text, /of 20/i, `${label} of 20`);
+  const prose = text.replace(/`[\s\S]*?`/g, "").replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, "");
+  assert.doesNotMatch(prose, /\/20(?!\d)/, `${label} n/20 in prose`);
+  assert.doesNotMatch(prose, /of 20/i, `${label} of 20 in prose`);
   assert.doesNotMatch(text, /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i, `${label} email`);
   assertNoIntervalMethod(text, label);
 }
@@ -94,9 +95,16 @@ test("eight boards render and the dialog exposes the work-sample tabs", () => {
     assert.match(dialog, /aria-controls="scenario-panel-commands"/);
     assert.match(dialog, /id="scenario-dialog-title"/);
     assert.match(dialog, /id="scenario-situation"/);
-    assert.match(dialog, /Illustrative/);
-    assert.match(dialog, /class="example-tag"/);
-    assert.ok((dialog.match(/Illustrative/g) || []).length >= 3, item.id);
+    if (item.sampleLabel === "Captured output") {
+      assert.ok((dialog.match(/Captured output/g) || []).length >= 3, item.id);
+      assert.doesNotMatch(dialog, /gemini-/);
+      assert.doesNotMatch(dialog, /pip install anubys/i);
+      assert.doesNotMatch(dialog, /anubys-home|\/home\/|\/Users\//);
+    } else {
+      assert.match(dialog, /Illustrative/);
+      assert.match(dialog, /class="example-tag"/);
+      assert.ok((dialog.match(/Illustrative/g) || []).length >= 3, item.id);
+    }
   }
   assert.equal(DIALOG_ATTRS.role, "dialog");
   assert.equal(DIALOG_ATTRS["aria-modal"], "true");
@@ -136,7 +144,8 @@ test("escape and backdrop close return focus to the board, and tabs cycle", () =
 
 test("boards 3 to 6 keep the gate command, the top-level verdict, and the run-log notes", () => {
   const retail = board("new-retail-task");
-  assert.match(retail.samples.commands, /python -m harness gates /);
+  assert.match(retail.samples.commands, /harness gates /);
+  assert.doesNotMatch(retail.samples.commands, /python -m harness/);
   assert.match(retail.samples.commands, /convert-tau-retail/);
   assert.doesNotMatch(retail.samples.commands, /harness gate --/);
   assert.match(renderDialogHtml(retail), /No suite verdict/);
@@ -146,9 +155,10 @@ test("boards 3 to 6 keep the gate command, the top-level verdict, and the run-lo
 
   const merge = board("candidate-merge");
   assert.match(merge.samples.commands, /harness gate --baseline runs\/baseline --candidate runs\/candidate --rollouts 5 --json runs\/verdict\.json/);
-  assert.match(merge.samples.output, /model_version=2\.5-flash-lite-07-2026/);
-  assert.match(merge.samples.output, /model_version=3\.5-flash-lite-07-2026/);
+  assert.doesNotMatch(merge.samples.output, /model_version=/);
   assert.match(merge.samples.results, /"verdict": "pass"/);
+  assert.match(merge.samples.resultsCaption, /excerpt/);
+  assert.match(merge.samples.pipelineCaption, /excerpt/);
   assert.match(renderDialogHtml(merge), /Example pipeline step/);
   assert.match(renderDialogHtml(merge), /Only Pass exits 0/);
   assert.match(renderDialogHtml(merge), />Bad input \(not a verdict\)</);
@@ -156,7 +166,13 @@ test("boards 3 to 6 keep the gate command, the top-level verdict, and the run-lo
   const interval = board("interval-crosses");
   assert.equal(interval.verdict.display, "Insufficient evidence");
   assert.equal(interval.verdict.exit, 3);
+  assert.doesNotMatch(interval.samples.output, /model_version=/);
   assert.match(interval.samples.results, /"verdict": "insufficient_evidence"/);
+  assert.doesNotMatch(interval.samples.results, /diagnostics/);
+  assert.match(interval.samples.diagnostics, /"scenario_id": "acme.return.003.v1"/);
+  assert.equal(interval.samples.resultsCaption, "Gate JSON (Example)");
+  assert.equal(interval.samples.diagnosticsCaption, "Diagnostic rows (Example)");
+  assert.match(renderDialogHtml(interval), /Diagnostic rows \(Example\)/);
   assert.match(renderDialogHtml(interval), /Example pipeline step/);
   assert.match(renderDialogHtml(interval), /crosses the minus 5 point margin/);
   assert.match(renderDialogHtml(interval), /Diagnostic only/);
@@ -166,8 +182,15 @@ test("boards 3 to 6 keep the gate command, the top-level verdict, and the run-lo
   assert.equal(misses.verdict.exit, 4);
   assert.match(misses.samples.output, /timeout=3/);
   assert.match(misses.samples.output, /model_version=3\.5-flash-lite-07-2026/);
+  assert.match(misses.samples.commands, /--json gate\.json/);
   assert.match(misses.samples.results, /"verdict": "invalid_run"/);
-  assert.doesNotMatch(misses.samples.results, /difference_ci/);
+  assert.match(misses.samples.results, /"difference": null/);
+  assert.match(misses.samples.results, /"difference_ci": null/);
+  assert.doesNotMatch(misses.samples.results, /environment_misses|diagnostics/);
+  assert.match(misses.samples.pipeline, /3 of 20/);
+  assert.match(misses.samples.pipeline, /3\/20/);
+  assert.match(misses.samples.pipeline, /more than 1\/20/);
+  assert.equal(misses.samples.resultsCaption, "Gate JSON (Example)");
   const dialog = renderDialogHtml(misses);
   assert.match(dialog, /Example pipeline step/);
   assert.match(dialog, /timeout=3 counts infrastructure timeouts \(environment misses\), not agent timeouts\. Agent timeouts count as task failures\./);
@@ -185,6 +208,40 @@ test("boards 3 to 6 keep the gate command, the top-level verdict, and the run-lo
   }
 });
 
+test("captured boards keep the real logs, and every board uses harness", () => {
+  const install = board("prove-install");
+  assert.match(install.samples.output, /Successfully installed anubys-0\.0\.1/);
+  assert.match(install.samples.commands, /anubys-0\.0\.1-py3-none-any\.whl/);
+  assert.match(renderDialogHtml(install), /Wheel anubys-0\.0\.1/);
+  assert.match(install.samples.results, /total_cost_usd=0/);
+  assert.match(install.samples.results, /pass=1/);
+  assert.doesNotMatch(install.samples.results, /model_version=/);
+
+  const cheap = board("cheap-pull-requests");
+  assert.match(cheap.samples.output, /error: --record is only for live mode/);
+  assert.match(cheap.samples.commands, /--record/);
+  assert.match(renderDialogHtml(cheap), /Exit code 2/);
+
+  const spend = board("spend-cap");
+  assert.match(spend.samples.output, /Refusing to start a live run\./);
+  assert.doesNotMatch(spend.samples.output, /^error:/m);
+  assert.match(spend.samples.example, /^error: this month's logged spend/);
+  assert.match(renderDialogHtml(spend), /does not add an <code>error:<\/code> prefix/);
+
+  const logs = board("two-spend-logs");
+  assert.match(logs.samples.output, /month_total_usd=21\.00/);
+  assert.match(logs.samples.output, /\$21\.00, under the \$38 cap/);
+  assert.match(logs.samples.results, /~\/\.anubys\/spend_log\.jsonl/);
+  assert.match(logs.samples.results, /live-spend-rows|live_spend_rows\.py restore/);
+
+  const source = read("js/scenarios-data.js");
+  assert.doesNotMatch(source, /python -m harness/);
+  for (const id of ["prove-install", "cheap-pull-requests", "spend-cap", "two-spend-logs"]) {
+    assert.equal(board(id).sampleLabel, "Captured output");
+    assert.equal(board(id).sampleExample, false);
+  }
+});
+
 test("new scenario files and rendered boards stay clear of banned copy", () => {
   const files = ["js/scenarios-data.js", "js/scenarios.js", "scenarios/index.html"];
   for (const rel of files) assertBanned(read(rel), rel);
@@ -194,6 +251,9 @@ test("new scenario files and rendered boards stay clear of banned copy", () => {
   }
   assertBanned(renderTeaserHtml(), "teaser");
   const page = read("scenarios/index.html");
+  assert.match(page, /Eight situations you will hit running Anubys, and what each verdict tells you\./);
+  assert.doesNotMatch(page, /placeholder/i);
+  assert.doesNotMatch(page, /data file/i);
   assert.match(page, /id="scenarios-root"/);
   assert.match(page, /id="scenarios-dialog"/);
   assert.match(page, /role="dialog"/);

@@ -117,20 +117,33 @@ function paragraphs(value) {
     .join("");
 }
 
-function sampleBlock(text, { pipeline = false, caption = "" } = {}) {
+function sampleBlock(text, { pipeline = false, caption = "", label = "Illustrative", example = true } = {}) {
+  if (!text) return "";
   const heading = pipeline
-    ? `<h3 class="scenario-pipeline">Example pipeline step</h3>`
+    ? `<h3 class="scenario-pipeline">${escapeHtml(caption || "Example pipeline step")}</h3>`
     : caption
       ? `<h3 class="scenario-sample-caption">${escapeHtml(caption)}</h3>`
       : "";
-  return `<div class="scenario-sample">${heading}<p class="scenario-sample-meta"><span class="sample-flag">Illustrative</span> <span class="example-tag">Example</span></p><pre class="scenario-pre" tabindex="0"><code>${escapeHtml(text)}</code></pre></div>`;
+  const flag = label ? `<span class="sample-flag">${escapeHtml(label)}</span>` : "";
+  const exampleChip = example ? `<span class="example-tag">Example</span>` : "";
+  const meta = [flag, exampleChip].filter(Boolean).join(" ");
+  return `<div class="scenario-sample">${heading}<p class="scenario-sample-meta">${meta}</p><pre class="scenario-pre" tabindex="0"><code>${escapeHtml(text)}</code></pre></div>`;
+}
+
+function sampleOpts(board, extra = {}) {
+  return {
+    label: board.sampleLabel || "Illustrative",
+    example: board.sampleExample !== false,
+    ...extra,
+  };
 }
 
 function renderBoardHtml(board, index) {
   const state = verdictState(board);
   const label = board.verdict.display || "No suite verdict";
   const note = board.cardNote ? `<span class="scenario-card-note">${escapeHtml(board.cardNote)}</span>` : "";
-  const flag = board.placeholder ? `<span class="sample-flag">Illustrative</span>` : "";
+  const flagLabel = board.sampleLabel || (board.placeholder ? "Illustrative" : "");
+  const flag = flagLabel ? `<span class="sample-flag">${escapeHtml(flagLabel)}</span>` : "";
   return `<li><button type="button" class="scenario-board" id="${escapeHtml(board.id)}" data-scenario="${escapeHtml(board.id)}" data-verdict="${state}" style="--i:${index}" aria-haspopup="dialog" aria-controls="scenarios-dialog"><span class="scenario-index">${escapeHtml(board.index)}</span><span class="scenario-board-title">${escapeHtml(board.title)}</span><span class="scenario-board-hook">${escapeHtml(board.hook)}</span>${note}<span class="scenario-board-foot"><span class="scenario-chip" data-verdict="${state}">${escapeHtml(label)}</span>${flag}</span></button></li>`;
 }
 
@@ -151,7 +164,8 @@ function renderVerdict(board) {
     return `<article class="scenario-outcome"><header class="verdict-card-top"><h3>No suite verdict</h3></header><p>${renderRich(verdict.why)}</p></article>`;
   }
   const kicker = verdict.scope === "command" ? "Command outcome" : "Suite verdict";
-  return `<article class="verdict-card" data-state="${verdictState(board)}"><header class="verdict-card-top"><p class="kicker">${kicker}</p><span class="example-tag">Example</span></header><h3>${escapeHtml(verdict.display)}</h3><p class="verdict-gap"><span>Exit</span><b>${escapeHtml(verdict.exit)}</b></p></article><p class="scenario-why">${renderRich(verdict.why)}</p>`;
+  const exampleChip = board.sampleExample === false ? "" : `<span class="example-tag">Example</span>`;
+  return `<article class="verdict-card" data-state="${verdictState(board)}"><header class="verdict-card-top"><p class="kicker">${kicker}</p>${exampleChip}</header><h3>${escapeHtml(verdict.display)}</h3><p class="verdict-gap"><span>Exit</span><b>${escapeHtml(verdict.exit)}</b></p></article><p class="scenario-why">${renderRich(verdict.why)}</p>`;
 }
 
 function renderCompare(compare) {
@@ -219,12 +233,22 @@ function renderTabs(board, selected) {
 
 function renderPanel(board, tab) {
   const samples = board.samples;
-  if (tab === "commands") return sampleBlock(samples.commands, { caption: "Command" });
-  if (tab === "results") return sampleBlock(samples.results, { caption: samples.resultsCaption || "Results excerpt" });
-  const note = board.outputNote ? `<p class="scenario-callout">${escapeHtml(board.outputNote)}</p>` : "";
-  const checks = samples.checks ? sampleBlock(samples.checks, { caption: samples.checksCaption || "Command output" }) : "";
-  const pipeline = samples.pipeline ? sampleBlock(samples.pipeline, { pipeline: true }) : "";
-  return `${sampleBlock(samples.output, { caption: "Run log" })}${note}${checks}${pipeline}`;
+  if (tab === "commands") return sampleBlock(samples.commands, { caption: "Command", ...sampleOpts(board) });
+  if (tab === "results") {
+    const rows = samples.diagnostics
+      ? sampleBlock(samples.diagnostics, { caption: samples.diagnosticsCaption || "Diagnostic rows (Example)", ...sampleOpts(board) })
+      : "";
+    return `${sampleBlock(samples.results, { caption: samples.resultsCaption || "Results excerpt", ...sampleOpts(board) })}${rows}`;
+  }
+  const note = board.outputNote ? `<p class="scenario-callout">${renderRich(board.outputNote)}</p>` : "";
+  const checks = samples.checks ? sampleBlock(samples.checks, { caption: samples.checksCaption || "Command output", ...sampleOpts(board) }) : "";
+  const pipeline = samples.pipeline
+    ? sampleBlock(samples.pipeline, { ...sampleOpts(board), pipeline: true, caption: samples.pipelineCaption || "Example pipeline step" })
+    : "";
+  const exampleBlock = tab === "output" && samples.example
+    ? sampleBlock(samples.example, { caption: samples.exampleCaption || "Not a captured run", label: "", example: true })
+    : "";
+  return `${sampleBlock(samples.output, { caption: samples.outputCaption || "Run log", ...sampleOpts(board) })}${note}${checks}${pipeline}${exampleBlock}`;
 }
 
 export function renderDialogHtml(board, tab = "commands") {

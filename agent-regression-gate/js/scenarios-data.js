@@ -1,8 +1,8 @@
 /**
  * Scenario boards for the Scenarios page.
  * Swap samples in this file. Markup stays put.
- * Boards 3 to 6 use the reviewed copy. Boards 1, 2, 7, and 8 are placeholders.
- * Every sample block is Illustrative. Invented run numbers wear an Example chip.
+ * Boards 1, 2, 7, and 8 are captured output. Boards 3 to 6 are illustrative.
+ * Invented samples wear an Example chip. Captured blocks that ran at $0 do not.
  * The gate command is `harness gate --baseline <dir> --candidate <dir> [--json PATH]`.
  * Do not add an interval-method field to gate output.
  */
@@ -15,71 +15,107 @@ export const SAMPLE_TABS = [
   { id: "results", label: "Results excerpt" },
 ];
 
-const BOARD_1_COMMANDS = `GEMINI_API_KEY= python -m harness run suites/dev_fixtures --model fixture-model --mode live --out runs/plan --limit 2 --rollouts 1 --ceiling 1 --dry-run
-GEMINI_API_KEY= python -m harness run suites/dev_fixtures --mode replay --cassettes cassettes/dev --out runs/replay`;
+const BOARD_1_COMMANDS = `python3 -m venv /tmp/anubys-build
+/tmp/anubys-build/bin/python -m pip install "build==1.3.0"
+cd /agent/repos/ci-agent-regression-harness
+/tmp/anubys-build/bin/python -m build --outdir /tmp/anubys-dist
 
-const BOARD_1_OUTPUT = `plan
-suite: dev_fixtures
+python3 -m venv /tmp/anubys-prove
+/tmp/anubys-prove/bin/python -m pip install --require-hashes -r requirements.lock
+/tmp/anubys-prove/bin/python -m pip install --no-deps /tmp/anubys-dist/anubys-0.0.1-py3-none-any.whl
+
+export PATH="/tmp/anubys-prove/bin:\${PATH}"
+export HOME=<user>
+cd /tmp/anubys-work
+SUITE="$(python -c 'from harness.bundled import suite_dir; print(suite_dir())')"
+CASSETTES="$(python -c 'from harness.bundled import cassette_dir; print(cassette_dir())')"
+
+env -u GEMINI_API_KEY harness run "$SUITE" \\
+  --model <model-version> \\
+  --mode live \\
+  --out /tmp/anubys-work/runs/dry-run \\
+  --limit 1 \\
+  --rollouts 1 \\
+  --ceiling 1 \\
+  --dry-run`;
+
+const BOARD_1_OUTPUT = `Successfully installed build-1.3.0 packaging-26.3 pyproject_hooks-1.3.3
+...
+Successfully built anubys-0.0.1.tar.gz and anubys-0.0.1-py3-none-any.whl
+...
+Successfully installed anubys-0.0.1
+Exit code: 0
+
+plan
+suite: tau_retail
+model: <model-version>
 mode: live
-dry_run: true
-scenario: example.clean.v1
-scenario: example.broken.v1
-model_calls: 0
+seed: scenario
+per_rollout_ceiling_usd: 1
+pricing_file: harness/data/gemini_pricing.yaml
+input_usd_per_million: 0.30
+output_usd_per_million: 2.50
+cached_usd_per_million: 0.03
+scenario: tau_retail.test.069.v3 rollouts=1
+total_rollouts: 1
+upper_bound_usd: 1
+Exit code: 0`;
 
-replay
-suite: dev_fixtures
-mode: replay
-scenario: example.clean.v1
-scenario: example.broken.v1
-model_calls: 0
-exit code: 0`;
+const BOARD_1_RESULTS = `env -u GEMINI_API_KEY harness run "$SUITE" \\
+  --model <model-version> \\
+  --mode replay \\
+  --out /tmp/anubys-work/runs/replay \\
+  --cassettes "$CASSETTES" \\
+  --limit 1 \\
+  --rollouts 1
 
-const BOARD_1_RESULTS = `{
-  "suite": "dev_fixtures",
-  "dry_run": true,
-  "scenarios": ["example.clean.v1", "example.broken.v1"],
-  "model_calls": 0
-}`;
+run_id=2026-11-17-tau_retail-808efd12 date=2026-11-17 git_sha=unknown model=<model-version> mode=replay
+outcomes pass=1 fail=0 env_miss=0 timeout=0 error=0
+total_cost_usd=0 cached_input_tokens=0 p50_s=0.01178385299999718 max_s=0.01178385299999718
+wrote /tmp/anubys-work/runs/replay/run_summary.json
+Exit code: 0`;
 
-const BOARD_2_COMMANDS = `python -m harness run suites/dev_fixtures --mode replay --cassettes cassettes/main --out runs/pr
-# --record belongs on the manual live workflow, not on the pull request
-python -m harness run suites/dev_fixtures --mode live --record --ceiling 1 --out runs/live`;
+const BOARD_2_COMMANDS = `env -u GEMINI_API_KEY harness run "$SUITE" \\
+  --model <model-version> \\
+  --mode replay \\
+  --out /tmp/anubys-work/runs/would-record \\
+  --cassettes "$CASSETTES" \\
+  --record \\
+  --limit 1 \\
+  --rollouts 1`;
 
-const BOARD_2_OUTPUT = `replay
-suite: dev_fixtures
-mode: replay
-cassettes: cassettes/main
-scenario: example.clean.v1
-scenario: example.broken.v1
-model_calls: 0
-exit code: 0`;
+const BOARD_2_OUTPUT = `error: --record is only for live mode
+Exit code: 2`;
 
-const BOARD_2_RESULTS = `{
-  "mode": "replay",
-  "cassettes": "cassettes/main",
-  "scenarios": ["example.clean.v1", "example.broken.v1"],
-  "model_calls": 0
-}`;
+const BOARD_2_RESULTS = `cassettes:
+  description: "Directory for model.json. Required for replay. When set on a live run, the cassette is recorded."
 
-const BOARD_3_COMMANDS = `python -m harness convert-tau-retail --split test --index 66 --out /tmp/retail-drafts
-python -m harness validate /tmp/retail-drafts
+if [ -n "\${CASSETTES//[[:space:]]/}" ]; then
+  args+=(--cassettes "$CASSETTES")
+  if [ "$MODE" = "live" ]; then
+    args+=(--record)
+  fi
+fi`;
+
+const BOARD_3_COMMANDS = `harness convert-tau-retail --split test --index 66 --out /tmp/retail-drafts
+harness validate /tmp/retail-drafts
 # rewrite the user text and initial state, set provenance, set owner
-python -m harness validate --write-hashes /tmp/retail-drafts
-python -m harness gates /tmp/retail-drafts`;
+harness validate --write-hashes /tmp/retail-drafts
+harness gates /tmp/retail-drafts`;
 
-const BOARD_3_OUTPUT = `$ python -m harness convert-tau-retail --split test --index 66 --out /tmp/retail-drafts
+const BOARD_3_OUTPUT = `$ harness convert-tau-retail --split test --index 66 --out /tmp/retail-drafts
 tau_retail.test.066.v1.yaml  allowed  cancel  4-7  sha256:d70cdae6...
 wrote 1 scenario(s) to /tmp/retail-drafts
 
-$ python -m harness validate /tmp/retail-drafts
+$ harness validate /tmp/retail-drafts
 ok 1 scenario(s), 0 suite file(s)`;
 
-const BOARD_3_CHECKS = `$ python -m harness validate /tmp/retail-drafts
+const BOARD_3_CHECKS = `$ harness validate /tmp/retail-drafts
 /tmp/retail-drafts/tau_retail.test.066.v1.yaml: gate_eligible: gate_eligible must be false for a straight τ-bench conversion. Rewrite the wording and state, set provenance.method to rewritten, then set gate_eligible.
 1 error(s) in 1 file(s); 1 scenario(s) parsed
 exit code: 1
 
-$ python -m harness gates /tmp/retail-drafts
+$ harness gates /tmp/retail-drafts
 schema: pass (1 scenario(s), 0 suite file(s))
 synthetic-pii: pass (1 scenario(s), 0 cassette file(s))
 secrets: pass (python scanner; gitleaks not installed, trufflehog not installed; 1 file(s))
@@ -112,13 +148,13 @@ provenance:
 const BOARD_4_COMMANDS = `harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5 --json runs/verdict.json`;
 
 const BOARD_4_OUTPUT = `$ harness run suites/my_retail --model gemini-2.5-flash-lite --mode replay --cassettes cassettes/baseline --out runs/baseline
-run_id=2026-11-17-my_retail-3f9a1c2e date=2026-11-17 git_sha=a1b2c3d model=gemini-2.5-flash-lite model_version=2.5-flash-lite-07-2026 mode=replay
+run_id=2026-11-17-my_retail-3f9a1c2e date=2026-11-17 git_sha=a1b2c3d model=gemini-2.5-flash-lite mode=replay
 outcomes pass=470 fail=30 env_miss=0 timeout=0 error=0
 total_cost_usd=0.00 cached_input_tokens=0 p50_s=4.2 max_s=19.8
 wrote runs/baseline/run_summary.json
 
 $ harness run suites/my_retail --model gemini-3.5-flash-lite --mode replay --cassettes cassettes/candidate --out runs/candidate
-run_id=2026-11-17-my_retail-7d41e0b9 date=2026-11-17 git_sha=a1b2c3d model=gemini-3.5-flash-lite model_version=3.5-flash-lite-07-2026 mode=replay
+run_id=2026-11-17-my_retail-7d41e0b9 date=2026-11-17 git_sha=a1b2c3d model=gemini-3.5-flash-lite mode=replay
 outcomes pass=469 fail=31 env_miss=0 timeout=0 error=0
 total_cost_usd=0.00 cached_input_tokens=0 p50_s=3.1 max_s=14.6
 wrote runs/candidate/run_summary.json
@@ -162,13 +198,13 @@ const BOARD_4_RESULTS = `{
 const BOARD_5_COMMANDS = `harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5`;
 
 const BOARD_5_OUTPUT = `$ harness run suites/my_retail --model gemini-2.5-flash-lite --mode replay --cassettes cassettes/baseline --out runs/baseline
-run_id=2026-11-17-my_retail-0c6b2a15 date=2026-11-17 git_sha=a1b2c3d model=gemini-2.5-flash-lite model_version=2.5-flash-lite-07-2026 mode=replay
+run_id=2026-11-17-my_retail-0c6b2a15 date=2026-11-17 git_sha=a1b2c3d model=gemini-2.5-flash-lite mode=replay
 outcomes pass=88 fail=12 env_miss=0 timeout=0 error=0
 total_cost_usd=0.00 cached_input_tokens=0 p50_s=4.0 max_s=17.5
 wrote runs/baseline/run_summary.json
 
 $ harness run suites/my_retail --model gemini-3.5-flash-lite --mode replay --cassettes cassettes/candidate --out runs/candidate
-run_id=2026-11-17-my_retail-91ae5d03 date=2026-11-17 git_sha=a1b2c3d model=gemini-3.5-flash-lite model_version=3.5-flash-lite-07-2026 mode=replay
+run_id=2026-11-17-my_retail-91ae5d03 date=2026-11-17 git_sha=a1b2c3d model=gemini-3.5-flash-lite mode=replay
 outcomes pass=86 fail=14 env_miss=0 timeout=0 error=0
 total_cost_usd=0.00 cached_input_tokens=0 p50_s=3.0 max_s=12.9
 wrote runs/candidate/run_summary.json
@@ -206,34 +242,35 @@ const BOARD_5_RESULTS = `{
   "baseline_counted": 100,
   "candidate_passes": 86,
   "candidate_counted": 100,
-  "reasons": [],
-  "diagnostics": [
-    {
-      "scenario_id": "acme.return.003.v1",
-      "family_id": "acme.return.003",
-      "scheduled_rollouts": { "baseline": 5, "candidate": 5 },
-      "miss_counts": { "baseline": 0, "candidate": 0 },
-      "baseline_pass_rate": 1.0,
-      "candidate_pass_rate": 0.4,
-      "difference": -0.6,
-      "difference_ci": { "lower": -0.9604, "upper": -0.2396, "level": 0.9 },
-      "note": "Diagnostic only. The suite verdict is the only gate."
-    },
-    {
-      "scenario_id": "acme.cancel.001.v1",
-      "family_id": "acme.cancel.001",
-      "scheduled_rollouts": { "baseline": 5, "candidate": 5 },
-      "miss_counts": { "baseline": 0, "candidate": 0 },
-      "baseline_pass_rate": 0.6,
-      "candidate_pass_rate": 0.8,
-      "difference": 0.2,
-      "difference_ci": { "lower": -0.2652, "upper": 0.6652, "level": 0.9 },
-      "note": "Diagnostic only."
-    }
-  ]
+  "reasons": []
 }`;
 
-const BOARD_6_COMMANDS = `harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5`;
+const BOARD_5_DIAGNOSTICS = `[
+  {
+    "scenario_id": "acme.return.003.v1",
+    "family_id": "acme.return.003",
+    "scheduled_rollouts": { "baseline": 5, "candidate": 5 },
+    "miss_counts": { "baseline": 0, "candidate": 0 },
+    "baseline_pass_rate": 1.0,
+    "candidate_pass_rate": 0.4,
+    "difference": -0.6,
+    "difference_ci": { "lower": -0.9604, "upper": -0.2396, "level": 0.9 },
+    "note": "Diagnostic only. The suite verdict is the only gate."
+  },
+  {
+    "scenario_id": "acme.cancel.001.v1",
+    "family_id": "acme.cancel.001",
+    "scheduled_rollouts": { "baseline": 5, "candidate": 5 },
+    "miss_counts": { "baseline": 0, "candidate": 0 },
+    "baseline_pass_rate": 0.6,
+    "candidate_pass_rate": 0.8,
+    "difference": 0.2,
+    "difference_ci": { "lower": -0.2652, "upper": 0.6652, "level": 0.9 },
+    "note": "Diagnostic only."
+  }
+]`;
+
+const BOARD_6_COMMANDS = `harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5 --json gate.json`;
 
 const BOARD_6_OUTPUT = `$ harness run suites/my_retail --model gemini-3.5-flash-lite --mode live --ceiling 1 --out runs/candidate
 run_id=2026-11-17-my_retail-b27c9f40 date=2026-11-17 git_sha=a1b2c3d model=gemini-3.5-flash-lite model_version=3.5-flash-lite-07-2026 mode=live
@@ -244,7 +281,7 @@ wrote runs/candidate/run_summary.json
 The 3 timeouts here are infrastructure timeouts (reason code rate_limit). That's 4 invented scenarios times 5 rollouts, so 20 per arm.
 A replay with a missing cassette entry stops earlier, on one line: error: missing cassette keys: ...`;
 
-const BOARD_6_PIPELINE = `Run harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5
+const BOARD_6_PIPELINE = `Run harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5 --json gate.json
 verdict: invalid_run
 ci_level: 0.9
 delta: 0.05
@@ -259,7 +296,7 @@ candidate_model_id: gemini-3.5-flash-lite
 baseline_total_cost_usd: 0.38
 candidate_total_cost_usd: 0.41
 reasons:
-- candidate: 3 in 20 scheduled rollouts are env_miss, an infra timeout, or unrecorded (3 in 20), which is more than 1 in 20. Judged per arm, not pooled. That run is invalid_run.
+- candidate: 3 of 20 scheduled rollouts are env_miss, an infra timeout, or unrecorded (3/20), which is more than 1/20. Judged per arm, not pooled. That run is invalid_run.
 - candidate scenario acme.return.002.v1: 2 valid rollouts of 5 scheduled; need at least 3 (ceil(3/5 * 5)). Valid rollouts are pass, fail, an agent timeout, an agent error, or a spend-ceiling error. Both arms must meet the floor or the run is invalid_run.
 Error: Process completed with exit code 4.`;
 
@@ -267,71 +304,89 @@ const BOARD_6_RESULTS = `{
   "verdict": "invalid_run",
   "delta": 0.05,
   "ci_level": 0.9,
+  "difference": null,
+  "difference_ci": null,
   "baseline_pass_rate": 0.9,
+  "candidate_pass_rate": 0.882352941176,
   "baseline_passes": 18,
   "baseline_counted": 20,
-  "candidate_pass_rate": 0.882352941176,
   "candidate_passes": 15,
   "candidate_counted": 17,
-  "environment_misses": {
-    "baseline": { "scheduled": 20, "misses": 0 },
-    "candidate": { "scheduled": 20, "misses": 3 }
-  },
-  "diagnostics": [
-    {
-      "scenario_id": "acme.return.002.v1",
-      "family_id": "acme.return.002",
-      "scheduled_rollouts": { "baseline": 5, "candidate": 5 },
-      "miss_counts": { "baseline": 0, "candidate": 3 },
-      "missing_cassette_keys": { "baseline": [], "candidate": [] },
-      "note": "Three infrastructure timeouts, so no cassette keys. Diagnostic only."
-    }
-  ],
   "reasons": [
-    "candidate: 3 in 20 scheduled rollouts are environment misses. Judged per arm, not pooled."
+    "candidate: 3 of 20 scheduled rollouts are env_miss, an infra timeout, or unrecorded (3/20), which is more than 1/20. Judged per arm, not pooled. That run is invalid_run.",
+    "candidate scenario acme.return.002.v1: 2 valid rollouts of 5 scheduled; need at least 3 (ceil(3/5 * 5)). Valid rollouts are pass, fail, an agent timeout, an agent error, or a spend-ceiling error. Both arms must meet the floor or the run is invalid_run."
   ]
 }`;
 
-const BOARD_7_COMMANDS = `python -m harness run suites/dev_fixtures --mode live --ceiling 1 --out runs/live
-python -m harness run suites/dev_fixtures --mode replay --cassettes cassettes/dev --out runs/replay
-python -m harness validate suites/dev_fixtures`;
+const BOARD_7_COMMANDS = `cd /agent/repos/ci-agent-regression-harness
+/tmp/anubys-prove/bin/python scripts/check_monthly_spend.py \\
+  --log /tmp/spend-under.jsonl --threshold 38
 
-const BOARD_7_OUTPUT = `error: monthly spend is at the cap. The next live rollout doesn't start.
+/tmp/anubys-prove/bin/python scripts/check_monthly_spend.py \\
+  --log /tmp/spend-under.jsonl \\
+  --threshold 38 \\
+  --ceiling 1 \\
+  --runs 1
 
-replay
-suite: dev_fixtures
-mode: replay
-scenario: example.clean.v1
-exit code: 0
+env -u GEMINI_API_KEY HOME=<user> \\
+  /tmp/anubys-prove/bin/harness validate \\
+  /agent/repos/ci-agent-regression-harness/suites/tau_retail/examples`;
 
-validate
-ok 2 scenario(s), 0 suite file(s)
-exit code: 0`;
+const BOARD_7_OUTPUT = `2026-11 logged spend is $37.50, under the $38 cap.
+Exit code: 0
 
-const BOARD_7_RESULTS = `{
-  "live_rollout": "not started",
-  "message": "error: monthly spend is at the cap. The next live rollout doesn't start.",
-  "replay": "still runs",
-  "validate": "still runs"
-}`;
+2026-11 logged spend is $37.50 plus $1 reserved for this run ($38.50 projected), which is at or above the $38 cap. Refusing to start a live run.
+Exit code: 1`;
 
-const BOARD_8_COMMANDS = `# Outside a checkout each machine keeps its own log.
-# The experiment workflow merges live-spend-rows artifacts, then runs the monthly check.`;
+const BOARD_7_EXAMPLE = `error: this month's logged spend plus the next rollout would be $38.50, at or above the $38 cap. Stopping so that rollout does not start.`;
 
-const BOARD_8_OUTPUT = `machine-a ~/.anubys/spend_log.jsonl month sum 12.00
-machine-b ~/.anubys/spend_log.jsonl month sum 9.00
-merged live-spend-rows month sum 21.00
-monthly check: under the cap
-next live rollout: still allowed on this sample`;
+const BOARD_7_RESULTS = `{"run_id":"sample-under-cap","date":"2026-11-17","model":"<model-version>","tokens":10,"cost_usd":37.50}
 
-const BOARD_8_RESULTS = `{
-  "logs": [
-    { "machine": "machine-a", "path": "~/.anubys/spend_log.jsonl", "month_sum": "12.00" },
-    { "machine": "machine-b", "path": "~/.anubys/spend_log.jsonl", "month_sum": "9.00" }
-  ],
-  "merged_artifact": "live-spend-rows",
-  "merged_month_sum": "21.00"
-}`;
+ok 9 scenario(s), 0 suite file(s)
+Exit code: 0
+
+ok 1 scenario(s), 1 suite file(s)
+Exit code: 0`;
+
+const BOARD_8_COMMANDS = `/tmp/anubys-prove/bin/python \\
+  /agent/repos/ci-agent-regression-harness/scripts/check_monthly_spend.py \\
+  --log /tmp/anubys-two-machines/machine-a.jsonl \\
+  --threshold 38 \\
+  --month 2026-11`;
+
+const BOARD_8_OUTPUT = `prior_runs=1 rows_counted=2 rows_appended=1 month=2026-11 month_total_usd=21.00
+Counted 1 prior live run(s) and 2 spend row(s) for 2026-11. Appended 1 row(s) that were not already in the log. The $38 check sees $21.00.
+Exit code: 0
+
+2026-11 logged spend is $21.00, under the $38 cap.
+Exit code: 0`;
+
+const BOARD_8_RESULTS = `spend/spend_log.jsonl is not package data. In a checkout the live log is
+that file at the repository root. Outside a checkout the live log is
+$HOME/.anubys/spend_log.jsonl.
+That file is per user and per machine, so two machines do not share a total.
+
+checkout_root None
+~/.anubys/spend_log.jsonl
+
+- name: Restore prior live spend
+  if: success() && inputs.mode == 'live'
+  env:
+    GH_TOKEN: <token>
+    GITHUB_REPOSITORY: \${{ github.repository }}
+    GITHUB_RUN_ID: \${{ github.run_id }}
+  run: |
+    set -euo pipefail
+    mkdir -p runs
+    python scripts/live_spend_rows.py restore \\
+      --log spend/spend_log.jsonl \\
+      --repository "$GITHUB_REPOSITORY" \\
+      --workflow experiment.yml \\
+      --run-id "$GITHUB_RUN_ID" \\
+      --summary-out runs/prior-spend.json
+
+- name: Enforce monthly spend cap
+  run: python scripts/check_monthly_spend.py --threshold 38`;
 
 const TIMEOUT_NOTE = "timeout=3 counts infrastructure timeouts (environment misses), not agent timeouts. Agent timeouts count as task failures.";
 
@@ -340,51 +395,62 @@ export const SCENARIOS = [
     id: "prove-install",
     index: "01",
     title: "Prove the install",
-    hook: "Dry-run the bundled suite, then replay it. Both work with GEMINI_API_KEY unset.",
-    placeholder: true,
-    situation: "You want proof the install works before any model call. Leave GEMINI_API_KEY unset on purpose. Neither command should reach a model.",
+    hook: "Install the wheel, dry-run the bundled suite, then replay it. GEMINI_API_KEY stays unset.",
+    cardNote: "Wheel anubys-0.0.1",
+    sampleLabel: "Captured output",
+    sampleExample: false,
+    placeholder: false,
+    situation: "Captured on Python 3.12 with GEMINI_API_KEY unset. No model call was made. The dry run writes the plan and exits. The output directory is not created. Replay reads the cassette shipped in the wheel.",
     steps: [
-      "Dry-run the bundled dev-fixture suite.",
-      "Replay it from a cassette you already have.",
-      "Both commands are run with GEMINI_API_KEY unset.",
+      "Install the built wheel `anubys-0.0.1` in a fresh environment.",
+      "Print a live plan with `harness run` and `--dry-run`. Exit code 0. `/tmp/anubys-work/runs/dry-run` was not created.",
+      "Replay the bundled cassette. Exit code 0. `total_cost_usd=0`. The line `pass=1` is a rollout outcome, not a suite verdict.",
     ],
     verdict: {
-      scope: "command",
-      display: "Pass",
-      exit: 0,
-      why: "Both commands exit 0. This is the command outcome, not a suite verdict. A suite verdict comes from harness gate.",
+      scope: "none",
+      display: null,
+      exit: null,
+      why: "These commands do not produce a suite verdict. Install, dry run, and replay each exit 0. The installed wheel is anubys-0.0.1. `git_sha=unknown` is the wheel running outside a checkout.",
     },
+    callouts: ["Wheel anubys-0.0.1. SUITE resolved to /tmp/anubys-prove/lib/python3.12/site-packages/harness/bundled/quickstart."],
     samples: {
       commands: BOARD_1_COMMANDS,
       output: BOARD_1_OUTPUT,
+      outputCaption: "Build, install, and dry run",
       pipeline: "",
       results: BOARD_1_RESULTS,
-      resultsCaption: "Plan excerpt",
+      resultsCaption: "Replay",
     },
   },
   {
     id: "cheap-pull-requests",
     index: "02",
     title: "Keep pull requests cheap",
-    hook: "Replay the cassette recorded on main. Record with --record only from the manual live workflow.",
-    placeholder: true,
-    situation: "A pull request should not start a live model call. The cassette recorded on main is enough for the check.",
+    hook: "Pull-request CI replays the committed cassette. --record is only for live mode.",
+    cardNote: "error: --record is only for live mode",
+    sampleLabel: "Captured output",
+    sampleExample: false,
+    placeholder: false,
+    situation: "Pull-request CI replays the committed cassette and leaves the cost at 0. A cassette directory on the manual live workflow is what adds --record. This run did not record.",
     steps: [
-      "Replay the cassette recorded on main.",
-      "Use --record only from the manual live workflow.",
+      "Replay is the Board 1 command: installed wheel, GEMINI_API_KEY unset, committed cassette. Exit code 0. `total_cost_usd=0`, and `pass=1` is a rollout outcome.",
+      "Passing `--record` on that replay refuses before any cassette write.",
     ],
     verdict: {
-      scope: "command",
-      display: "Pass",
-      exit: 0,
-      why: "Replay exits 0 and does not call the model. This is the command outcome, not a suite verdict.",
+      scope: "none",
+      display: null,
+      exit: null,
+      why: "There is no suite verdict. Replay exits 0. `--record` on replay exits 2.",
     },
+    callouts: ["error: --record is only for live mode. Exit code 2. The output directory was not created. The cassette bytes were unchanged."],
+    outputNote: "error: --record is only for live mode",
     samples: {
       commands: BOARD_2_COMMANDS,
       output: BOARD_2_OUTPUT,
+      outputCaption: "Replay refuses --record",
       pipeline: "",
       results: BOARD_2_RESULTS,
-      resultsCaption: "Replay excerpt",
+      resultsCaption: "Record only on a live run",
     },
   },
   {
@@ -462,8 +528,9 @@ export const SCENARIOS = [
       commands: BOARD_4_COMMANDS,
       output: BOARD_4_OUTPUT,
       pipeline: BOARD_4_PIPELINE,
+      pipelineCaption: "Example pipeline step excerpt",
       results: BOARD_4_RESULTS,
-      resultsCaption: "What --json writes",
+      resultsCaption: "Gate JSON excerpt",
     },
   },
   {
@@ -502,7 +569,9 @@ export const SCENARIOS = [
       output: BOARD_5_OUTPUT,
       pipeline: BOARD_5_PIPELINE,
       results: BOARD_5_RESULTS,
-      resultsCaption: "Gate JSON, plus diagnostic rows that are not a gate",
+      resultsCaption: "Gate JSON (Example)",
+      diagnostics: BOARD_5_DIAGNOSTICS,
+      diagnosticsCaption: "Diagnostic rows (Example)",
     },
   },
   {
@@ -542,13 +611,13 @@ export const SCENARIOS = [
         { name: "Candidate", misses: 3, scheduled: 20 },
       ],
     },
-    extra: "missing_cassette_keys can be shorter than miss_counts. Infrastructure timeouts and rollouts with no recorded outcome are misses, but they don't have a cassette key. A cassette miss does, for example acme.return.002.v1/get_order_details. An agent timeout, an agent error, and a spend-ceiling error are different: they count as task failures and do not count as misses. No difference and no interval bounds are printed. An Invalid run never gets an interval.",
+    extra: "missing_cassette_keys can be shorter than miss_counts. Infrastructure timeouts and rollouts with no recorded outcome are misses, but they don't have a cassette key. A cassette miss does, for example acme.return.002.v1/get_order_details. An agent timeout, an agent error, and a spend-ceiling error are different: they count as task failures and do not count as misses. The text summary does not print a difference or interval bounds. Gate JSON sets difference and difference_ci to null. An Invalid run never gets an interval.",
     samples: {
       commands: BOARD_6_COMMANDS,
       output: BOARD_6_OUTPUT,
       pipeline: BOARD_6_PIPELINE,
       results: BOARD_6_RESULTS,
-      resultsCaption: "Gate JSON. No interval, because the run is invalid.",
+      resultsCaption: "Gate JSON (Example)",
     },
   },
   {
@@ -556,25 +625,33 @@ export const SCENARIOS = [
     index: "07",
     title: "Spend is at the cap",
     hook: "The next live rollout doesn't start. Replay and validate still run.",
-    placeholder: true,
-    situation: "Logged spend for the month has reached the cap. The message is a single error: line. The next live rollout doesn't start.",
+    cardNote: "The pre-check does not add an error: prefix.",
+    sampleLabel: "Captured output",
+    sampleExample: false,
+    placeholder: false,
+    situation: "A temp copy of the spend log holds $37.50 for November 2026, just under the $38 cap. Reserving the next rollout's $1 ceiling projects $38.50, so the next live rollout doesn't start. Replay and validate still exit 0.",
     steps: [
-      "Read the single error: line.",
-      "Replay and validate still run. They do not start a live rollout.",
-      "The monthly check in this sample is the {example} $38 check.",
+      "The monthly pre-check prints its refusal to stderr. It does not add an `error:` prefix. Exit code 1. Stdout was empty.",
+      "`harness run --mode live` was not executed. After a model lookup, the per-rollout check would print one stderr line and return 2. That line is marked Example.",
+      "Replay is the Board 1 command. Exit code 0. `total_cost_usd=0`. Validate exits 0: `ok 9 scenario(s), 0 suite file(s)`. The bundled suite validates as `ok 1 scenario(s), 1 suite file(s)`.",
     ],
     verdict: {
       scope: "none",
       display: null,
       exit: null,
-      why: "There is no suite verdict. The live command stops before a rollout, so it does not print Pass, Block, Insufficient evidence, or Invalid run.",
+      why: "There is no suite verdict. The captured pre-check refuses the next live rollout without an `error:` prefix. Replay and validate still exit 0.",
     },
+    callouts: ["This pre-check prints that sentence to stderr. It does not add an `error:` prefix."],
+    outputNote: "This pre-check prints that sentence to stderr. It does not add an `error:` prefix.",
     samples: {
       commands: BOARD_7_COMMANDS,
       output: BOARD_7_OUTPUT,
+      outputCaption: "Monthly check",
+      example: BOARD_7_EXAMPLE,
+      exampleCaption: "From code, not a captured run",
       pipeline: "",
       results: BOARD_7_RESULTS,
-      resultsCaption: "Spend excerpt",
+      resultsCaption: "Seed row, replay, and validate",
     },
   },
   {
@@ -582,23 +659,27 @@ export const SCENARIOS = [
     index: "08",
     title: "Two machines, two spend logs",
     hook: "Outside a checkout the log is per user and per machine.",
-    placeholder: true,
-    situation: "Two machines each wrote a live spend log. Outside a checkout those logs do not share a total. The log is per user and per machine.",
+    sampleLabel: "Captured output",
+    sampleExample: false,
+    placeholder: false,
+    situation: "Outside a checkout, each user on each machine has one live log. A live experiment downloads earlier live-spend-rows artifacts and appends rows that are not already in the workspace log, then runs the $38 check.",
     steps: [
-      "The GitHub experiment workflow sums the month by merging live-spend-rows artifacts before the {example} $38 check.",
+      "Two seeded temp logs merged locally to $21.00. Machine A was $12.25. Machine B was $8.75. The repeated machine A row was not appended again.",
+      "The GitHub CLI for `live_spend_rows.py restore` was not run. The same restore function was called in-process and opened no socket.",
     ],
     verdict: {
       scope: "none",
       display: null,
       exit: null,
-      why: "There is no suite verdict. This step adds up spend. It is not harness gate.",
+      why: "There is no suite verdict. The merge and the monthly check each exit 0. The $38 check sees $21.00.",
     },
     samples: {
       commands: BOARD_8_COMMANDS,
       output: BOARD_8_OUTPUT,
+      outputCaption: "Local merge and monthly check",
       pipeline: "",
       results: BOARD_8_RESULTS,
-      resultsCaption: "Merged spend excerpt",
+      resultsCaption: "Log path and workflow",
     },
   },
 ];
