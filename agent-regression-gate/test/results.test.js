@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { INTERVAL_FALLBACK, RUN_SUMMARY_PATH, parseResults, parseResultsV2, parseRunSummary, summaryRows } from "../js/results.js";
+import { INTERVAL_FALLBACK, RUN_SUMMARY_PATH, parseResults, parseResultsV2, parseRunSummary, suiteWarning, summaryRows } from "../js/results.js";
 
 const shipped = JSON.parse(
   readFileSync(new URL("../data/results.preliminary.json", import.meta.url), "utf8"),
@@ -22,7 +22,8 @@ test("the shipped harness preliminary file parses as insufficient evidence", () 
   assert.equal(view.shape, "harness");
   assert.equal(view.headline, "Insufficient evidence");
   assert.equal(view.verdict, "insufficient_evidence");
-  assert.equal(view.likelyRegression, false);
+  assert.equal(view.likelyRegression, null);
+  assert.equal(view.warning, null);
   assert.equal(view.status, "preliminary");
   assert.equal(view.runKind, "screening");
   assert.equal(view.baselinePoolModelId, "tau-retail-baseline-pool");
@@ -53,8 +54,8 @@ test("the shipped harness preliminary file parses as insufficient evidence", () 
   assert.doesNotMatch(broken.note, /\/20(?!\d)/);
   assert.match(broken.note, /5%/);
   assert.equal(clean.familyId, "example.clean");
-  assert.equal(clean.baselineText, "90%");
-  assert.equal(clean.candidateText, "90%");
+  assert.equal(clean.baselineText, "100%");
+  assert.equal(clean.candidateText, "100%");
   assert.equal(clean.differenceText, "0 pp");
   assert.equal(view.charts.mde.status, "preliminary");
   assert.equal(view.charts.mde.points.length, 3);
@@ -72,6 +73,108 @@ test("the shipped harness preliminary file parses as insufficient evidence", () 
   assert.equal(rows.find((row) => row.label === "Stopped").text, "None");
   assert.equal(rows.find((row) => row.label === "Stopped").example, false);
   assert.equal(rows.some((row) => /p95/i.test(row.label)), false);
+});
+
+test("preliminary example intervals match counted rollouts", () => {
+  const z = 1.6448536;
+  const delta = 0.05;
+  function bounds(baselinePasses, baselineCounted, candidatePasses, candidateCounted) {
+    const baselineRate = (baselinePasses + 1) / (baselineCounted + 2);
+    const candidateRate = (candidatePasses + 1) / (candidateCounted + 2);
+    const center = candidateRate - baselineRate;
+    const standardError = Math.sqrt(
+      (baselineRate * (1 - baselineRate)) / (baselineCounted + 2)
+      + (candidateRate * (1 - candidateRate)) / (candidateCounted + 2),
+    );
+    return {
+      raw: candidatePasses / candidateCounted - baselinePasses / baselineCounted,
+      lower: Math.max(-1, center - z * standardError),
+      upper: Math.min(1, center + z * standardError),
+    };
+  }
+  function counted(row) {
+    return {
+      baseline: row.scheduled_rollouts.baseline - row.miss_counts.baseline,
+      candidate: row.scheduled_rollouts.candidate - row.miss_counts.candidate,
+    };
+  }
+  const scored = [];
+  for (const row of shipped.verdicts.diagnostics) {
+    if (row.baseline_pass_rate == null) {
+      assert.equal(row.difference_ci ?? null, null, row.scenario_id);
+      continue;
+    }
+    const n = counted(row);
+    const baselinePasses = Math.round(row.baseline_pass_rate * n.baseline);
+    const candidatePasses = Math.round(row.candidate_pass_rate * n.candidate);
+    assert.ok(Math.abs(baselinePasses / n.baseline - row.baseline_pass_rate) < 1e-12, row.scenario_id);
+    assert.ok(Math.abs(candidatePasses / n.candidate - row.candidate_pass_rate) < 1e-12, row.scenario_id);
+    const expected = bounds(baselinePasses, n.baseline, candidatePasses, n.candidate);
+    assert.ok(Math.abs(row.difference - expected.raw) < 1e-12, row.scenario_id);
+    assert.ok(Math.abs(row.difference_ci.lower - expected.lower) < 1e-6, `${row.scenario_id} lower`);
+    assert.ok(Math.abs(row.difference_ci.upper - expected.upper) < 1e-6, `${row.scenario_id} upper`);
+    scored.push({ baselinePasses, baselineCounted: n.baseline, candidatePasses, candidateCounted: n.candidate });
+  }
+  const clean = shipped.verdicts.diagnostics.find((row) => row.scenario_id === "example.clean.v1");
+  assert.deepEqual([clean.baseline_pass_rate, clean.candidate_pass_rate], [1, 1]);
+  assert.ok(Math.abs(clean.difference_ci.lower - (-0.308)) < 1e-3);
+  assert.ok(Math.abs(clean.difference_ci.upper - 0.308) < 1e-3);
+
+  const pooled = scored.reduce((sum, row) => ({
+    baselinePasses: sum.baselinePasses + row.baselinePasses,
+    baselineCounted: sum.baselineCounted + row.baselineCounted,
+    candidatePasses: sum.candidatePasses + row.candidatePasses,
+    candidateCounted: sum.candidateCounted + row.candidateCounted,
+  }), { baselinePasses: 0, baselineCounted: 0, candidatePasses: 0, candidateCounted: 0 });
+  const overall = shipped.verdicts.overall;
+  const expected = bounds(
+    pooled.baselinePasses,
+    pooled.baselineCounted,
+    pooled.candidatePasses,
+    pooled.candidateCounted,
+  );
+  assert.deepEqual(
+    [pooled.baselinePasses, pooled.baselineCounted, pooled.candidatePasses, pooled.candidateCounted],
+    [13, 15, 12, 15],
+  );
+  assert.ok(Math.abs(overall.difference - expected.raw) < 1e-12);
+  assert.ok(Math.abs(overall.difference_ci.lower - expected.lower) < 1e-6);
+  assert.ok(Math.abs(overall.difference_ci.upper - expected.upper) < 1e-6);
+  const block = overall.difference_ci.upper < -delta;
+  const pass = overall.difference_ci.lower > -delta;
+  assert.equal(overall.verdict, block ? "block" : pass ? "pass" : "insufficient_evidence");
+  assert.equal(overall.likely_regression, null);
+  const view = parseResults(shipped);
+  assert.equal(view.headline, "Insufficient evidence");
+  assert.equal(view.verdict, "insufficient_evidence");
+  assert.equal(view.warning, null);
+});
+
+test("schema 2.1.0 null likely_regression is not computed and is not a warning", () => {
+  const doc = structuredClone(shipped);
+  doc.verdicts.overall.likely_regression = null;
+  const view = parseResults(doc);
+  assert.equal(view.headline, "Insufficient evidence");
+  assert.equal(view.verdict, "insufficient_evidence");
+  assert.equal(view.likelyRegression, null);
+  assert.equal(view.warning, null);
+  assert.equal(suiteWarning(view.likelyRegression, view.verdict), null);
+  assert.doesNotMatch(`${view.headline}\n${view.why}\n${view.summaryNote}`, /Likely regression/);
+
+  const marked = structuredClone(shipped);
+  marked.verdicts.overall.likely_regression = true;
+  const warned = parseResults(marked);
+  assert.equal(warned.headline, "Insufficient evidence");
+  assert.equal(warned.warning, "Likely regression");
+
+  for (const value of ["yes", 1, 0]) {
+    const bad = structuredClone(shipped);
+    bad.verdicts.overall.likely_regression = value;
+    assert.throws(
+      () => parseResults(bad),
+      /verdicts\.overall\.likely_regression must be a boolean or null/,
+    );
+  }
 });
 
 test("harness run_kind rules refuse a model id mismatch", () => {

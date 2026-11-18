@@ -460,6 +460,7 @@ function renderResults(view) {
     el("article", { class: "verdict", "data-verdict": view.verdict }, [
       el("p", { class: "kicker" }, view.status === "preliminary" ? "Preliminary" : "Final"),
       el("h3", {}, view.headline),
+      view.warning ? el("p", { class: "status-warn" }, view.warning) : null,
       el("p", { class: "why" }, view.why),
     ]),
     el("p", {

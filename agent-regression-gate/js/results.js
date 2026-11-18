@@ -20,8 +20,9 @@
  *
  * Harness 2.1.0 labels come from verdicts.overall.verdict:
  *   pass, block, insufficient_evidence, invalid_run.
- * likely_regression is a boolean on that verdict. It is true only when the
- * verdict is insufficient_evidence and difference is below -delta.
+ * likely_regression is true only when the verdict is insufficient_evidence and
+ * difference is below -delta. Null means the flag is not computed (v0.1).
+ * The suite status still comes from verdicts.overall.verdict.
  *
  * Scenario rows are diagnostics. They never become a per-scenario pass or block.
  * Version 2.0.0 adds an optional one-sentence caption on each scenario and arm,
@@ -130,6 +131,7 @@ function buildView(doc, version) {
     status,
     level: 0.9,
     likelyRegression,
+    warning: suiteWarning(likelyRegression, verdict),
     invalidRun,
     verdict,
     headline: headlineFor(verdict),
@@ -317,8 +319,8 @@ function isSchema210(doc, version) {
 function readLikelyRegression(doc, schema210) {
   if (schema210) {
     const value = doc.verdicts?.overall?.likely_regression;
-    if (typeof value !== "boolean") {
-      throw new Error("verdicts.overall.likely_regression must be a boolean");
+    if (value !== true && value !== false && value !== null) {
+      throw new Error("verdicts.overall.likely_regression must be a boolean or null");
     }
     if (doc.likely_regression !== undefined && doc.likely_regression !== true && doc.likely_regression !== false && doc.likely_regression !== null) {
       throw new Error("likely_regression must be true, false, or null");
@@ -820,6 +822,7 @@ function buildHarnessView(doc) {
     source: doc.source,
     level: numbers.ciLevel ?? 0.9,
     likelyRegression,
+    warning: suiteWarning(likelyRegression, verdictKey),
     invalidRun: overall.verdict === "invalid_run",
     verdict: verdictKey,
     headline: headlineFor(verdictKey),
@@ -910,10 +913,16 @@ function readBoundedNumber(value, label, min, max, required, exclusive = false) 
   return value;
 }
 
+export function suiteWarning(likelyRegression, verdict) {
+  if (likelyRegression !== true || verdict !== "insufficient_evidence") return null;
+  return "Likely regression";
+}
+
 function assertHarnessLikely(verdict, flag, numbers) {
-  if (typeof flag !== "boolean") {
-    throw new Error("verdicts.overall.likely_regression must be a boolean");
+  if (flag !== true && flag !== false && flag !== null) {
+    throw new Error("verdicts.overall.likely_regression must be a boolean or null");
   }
+  if (flag === null) return null;
   if (verdict !== "insufficient_evidence") {
     if (flag) throw new Error("likely_regression is false unless the verdict is insufficient_evidence");
     return false;

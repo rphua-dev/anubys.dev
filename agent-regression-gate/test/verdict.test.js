@@ -216,6 +216,16 @@ test("pooled interval on the pass-rate gap", () => {
   assert.ok(near.lower < -0.05, near.lower);
   assert.ok(Math.abs(near.meanDelta + 0.1) < 1e-12);
 
+  const forward = scorePair([470, 500], [469, 500]);
+  const mirror = scorePair([469, 500], [470, 500]);
+  assert.equal(mirror.verdict, "no_regression");
+  assert.equal(mirror.headline, "Pass");
+  assert.ok(forward.meanDelta < 0 && mirror.meanDelta > 0);
+  assert.ok(Math.abs(mirror.meanDelta + forward.meanDelta) < 1e-12);
+  assert.ok(Math.abs(mirror.lower + forward.upper) < 1e-12);
+  assert.ok(Math.abs(mirror.upper + forward.lower) < 1e-12);
+  assert.ok(mirror.lower > -0.05);
+
   const split = scoreRun([
     scenario("wide", { baseline: countedArm(10, 10), candidate: countedArm(10, 10) }),
     scenario("rest", { baseline: countedArm(78, 90), candidate: countedArm(76, 90) }),
