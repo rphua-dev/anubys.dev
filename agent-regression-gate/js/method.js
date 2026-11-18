@@ -53,7 +53,7 @@ export const METHOD_STEPS = [
     title: "Scorer",
     subtitle: "90% interval",
     plain: "For each task, the harness compares how often the two versions pass, then checks whether the gap is real.",
-    technical: "Pass rates are paired by scenario. The gap gets a 90% interval.",
+    technical: "Pass rates are pooled within each arm: each arm's passes over its counted rollouts. The gap gets a 90% interval.",
   },
   {
     id: "suite",

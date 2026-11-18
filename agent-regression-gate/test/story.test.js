@@ -20,7 +20,10 @@ import {
   missesInvalidate,
   railIndexFromKey,
   regressionGraphicIds,
+  bindFilm,
+  renderFilmHtml,
   renderStoryHtml,
+  syncFilmPause,
   sentenceCount,
   storyMotion,
   storyPosition,
@@ -209,4 +212,60 @@ test("the story route keeps the eleven steps and motion stays optional", () => {
     if (!block.includes("var(--accent)") && !block.includes("#ff7a1a")) continue;
     assert.match(block, /how-reg/, block.slice(0, 180));
   }
+});
+
+test("the film Pause button keeps aria-pressed in sync with the paused state", () => {
+  assert.match(renderFilmHtml(), /class="film-pause" aria-pressed="false">Pause</);
+  const button = {
+    attrs: {},
+    textContent: "",
+    setAttribute(name, value) { this.attrs[name] = value; },
+  };
+  syncFilmPause(button, false);
+  assert.equal(button.attrs["aria-pressed"], "false");
+  assert.equal(button.textContent, "Pause");
+  syncFilmPause(button, true);
+  assert.equal(button.attrs["aria-pressed"], "true");
+  assert.equal(button.textContent, "Play");
+
+  const pause = {
+    attrs: { "aria-pressed": "false" },
+    textContent: "Pause",
+    hidden: false,
+    listeners: {},
+    setAttribute(name, value) { this.attrs[name] = value; },
+    addEventListener(type, fn) { this.listeners[type] = fn; },
+  };
+  const frame = { hidden: false };
+  const dot = { setAttribute() {}, removeAttribute() {}, addEventListener() {} };
+  const film = {
+    classList: { add() {} },
+    addEventListener() {},
+    contains() { return false; },
+    querySelector(sel) {
+      if (sel === ".film") return null;
+      if (sel === ".film-line") return { textContent: "", setAttribute() {} };
+      if (sel === ".film-pause") return pause;
+      return null;
+    },
+    querySelectorAll(sel) {
+      if (sel === ".film-frame") return [frame];
+      if (sel === ".film-dot") return [dot];
+      return [];
+    },
+  };
+  const win = {
+    matchMedia() { return { matches: false }; },
+    clearInterval() {},
+    setInterval() { return 1; },
+    document: { activeElement: null },
+  };
+  bindFilm(film, win);
+  assert.equal(pause.attrs["aria-pressed"], "false");
+  pause.listeners.click();
+  assert.equal(pause.attrs["aria-pressed"], "true");
+  assert.equal(pause.textContent, "Play");
+  pause.listeners.click();
+  assert.equal(pause.attrs["aria-pressed"], "false");
+  assert.equal(pause.textContent, "Pause");
 });

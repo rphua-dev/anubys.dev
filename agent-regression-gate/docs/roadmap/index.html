@@ -6,9 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Roadmap · Anubys</title>
   <meta name="description" content="Built, Next, and Planned. Dates are targets and can move.">
-  <link rel="canonical" href="https://anubys.dev/docs/roadmap/">
+  <meta http-equiv="refresh" content="0; url=../../about/#roadmap">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://anubys.dev/about/#roadmap">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://anubys.dev/docs/roadmap/">
+  <meta property="og:url" content="https://anubys.dev/about/#roadmap">
   <meta property="og:title" content="Anubys">
   <meta property="og:description" content="Anubys, a CI-native agent regression model harness.">
   <meta property="og:image" content="https://anubys.dev/og.png">
@@ -22,6 +24,15 @@
   <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../../css/site.css">
   <script>document.documentElement.classList.add("js");</script>
+<script>
+(function () {
+  var base = "../../about/";
+  var fallback = "roadmap";
+  var raw = location.hash.replace(/^#/, "");
+  var id = raw || fallback;
+  location.replace(base + "#" + id);
+})();
+</script>
 </head>
 <body>
   <a class="skip" href="#content">Skip to main content</a>
@@ -37,54 +48,21 @@
       <nav id="nav-menu" class="nav-links" aria-label="Primary">
         <a href="../../">Product</a>
         <a href="../../how-it-works/">How it works</a>
-        <a href="../../method/">Method</a>
-        <a href="../../gate/">Gate</a>
-        <a href="../../results/">Results</a>
-        <a href="../../performance/">Performance</a>
-        <a href="../../integrations/">Integrations</a>
-        <a href="../" aria-current="page">Docs</a>
         <a href="../../scenarios/">Scenarios</a>
-        <a href="../../use-cases/">Use cases</a>
-        <a href="../getting-started/">Guide</a>
+        <a href="../../results/">Results</a>
+        <a href="../" aria-current="page">Docs</a>
         <a href="../../about/">About</a>
       </nav>
     </div>
   </header>
   <main id="content">
-    <div class="docs-shell">
-      <div class="docs-tools">
-        <form class="docs-search" role="search" action="./">
-          <label for="docs-q">Search headings</label>
-          <input id="docs-q" type="search" name="q" placeholder="Filter headings" autocomplete="off" aria-controls="docs-hits" aria-expanded="false">
-        </form>
-        <p class="docs-hit-status" id="docs-hit-status" role="status" aria-live="polite"></p>
-        <ul class="docs-hits" id="docs-hits" hidden></ul>
-        <details class="docs-menu">
-          <summary>Documentation</summary>
-          <nav class="docs-nav" aria-label="Documentation">
-            <p class="docs-group">Start</p><a href="../">Introduction</a><a href="../getting-started/">Getting started</a><a href="../quickstart/">Quickstart</a><a href="../install/">Install</a><a href="../concepts/">Concepts</a><p class="docs-group">Guides</p><a href="../guides/scenarios/">Writing scenarios</a><a href="../guides/adapters/">Adding a provider adapter</a><a href="../guides/spend/">Spend governance</a><p class="docs-group">Reference</p><a href="../reference/results/">results.json</a><a href="../reference/adapter/">Adapter contract</a><a href="../reference/ci/">CI and OIDC</a><a href="../reference/data/">Where results go</a><p class="docs-group">Project</p><a href="../changelog/">Changelog</a><a href="./" aria-current="page">Roadmap</a><p class="docs-group">Site</p><a href="../dns-setup/">DNS setup</a>
-          </nav>
-        </details>
+    <section class="section">
+      <div class="wrap">
+        <p class="kicker">Moved</p>
+        <h1>This page has moved.</h1>
+        <p><a href="../../about/#roadmap">About, Roadmap</a></p>
       </div>
-      <article class="docs-article">
-        <header class="docs-head">
-          <p class="kicker">Project</p>
-          <h1>Roadmap</h1>
-          <p class="docs-lede">Three labels: Built, Next, and Planned. Dates are targets and can move.</p>
-        </header>
-        <nav class="docs-toc" aria-labelledby="on-this-page">
-          <p class="docs-toc-label" id="on-this-page">On this page</p>
-          <ol><li><a href="#built">Built</a></li><li><a href="#next">Next</a></li><li><a href="#planned">Planned</a></li></ol>
-        </nav>
-        <div class="docs-body">
-          <div class="roadmap" aria-label="Built, Next, and Planned"><section class="docs-sec road-lane" id="built" aria-labelledby="built-title"><h2 id="built-title">Built</h2><article class="road-card"><p class="road-flag">Built</p><h3>Rollout runner</h3><p><code>harness run</code>, live and replay.</p></article><article class="road-card"><p class="road-flag">Built</p><h3>Results schema 2.1.0 checker</h3><p>The site reads schema 2.1.0, and still reads 1 and 2.0.0.</p></article><article class="road-card"><p class="road-flag">Built</p><h3>Gemini adapter</h3><p>One adapter and an allowlist entry for a pinned Gemini Flash-Lite model id (lives in <code>config/allowed_models.txt</code> and is passed with <code>--model</code>). Gemini is the only provider today.</p></article><article class="road-card"><p class="road-flag">Built</p><h3>Cassette replay</h3><p>Keyed by a hash of each model request. Needs your own <code>--record</code> first. No sample recording ships. A replay is <span class="example-tag">Example</span> $0.</p></article><article class="road-card"><p class="road-flag">Built</p><h3>Monthly spend check</h3><p>The <span class="example-tag">Example</span> $38 check stops new live rollouts once logged spend this UTC month reaches the cap. A run already in progress can finish, so the month can overshoot slightly.</p></article><article class="road-card"><p class="road-flag">Built</p><h3>Per-user spend log</h3><p>Outside a checkout, live runs use one <code>~/.anubys/spend_log.jsonl</code> per user per machine, with no override, so the monthly check cannot be split across folders. A live run needs <code>HOME</code> set. Gemini retries are capped at 750 seconds. Hitting that cap is an infrastructure miss, not a regression. Too many misses make the run invalid. Spend is logged per run, measured from the A/A and Block runs. v0.1 does not compute a derived cost per verdict.</p></article><article class="road-card"><p class="road-flag">Built</p><h3>Run summary schema</h3><p><code>run_summary.json</code> has a published schema, version 1.1.0, which adds <code>model_version</code>. This site still reads 1.0.0 files. That contract is <a href="../../schema/run_summary-1.0.0.schema.json">schema/run_summary-1.0.0.schema.json</a>. Dollar amounts are decimal strings. v0.1 writes that file plus a CLI summary.</p></article><article class="road-card"><p class="road-flag">Built</p><h3>Model version check</h3><p>Before the first paid call, a live run reads the model version from Gemini and refuses the run when it differs from the pinned version in <code>config/model_versions.txt</code>. Replay and a dry run skip that call.</p></article><article class="road-card"><p class="road-flag">Built</p><h3>AWS dev account</h3><p>Terraform for an artifact bucket and keyless GitHub OIDC roles. Applied on October 9, 2026 to a personal dev AWS account. CI does not use those roles yet.</p></article></section>
-<section class="docs-sec road-lane" id="next" aria-labelledby="next-title"><h2 id="next-title">Next</h2><p class="fine">Cost runs are scheduled November 10 to 12, and no live experiment has run yet.</p><article class="road-card"><p class="road-flag">Next</p><h3>Planted regression on a real check</h3><p>A planted regression shown as Block on a real pull-request check. Target November 17.</p></article></section>
-<section class="docs-sec road-lane" id="planned" aria-labelledby="planned-title"><h2 id="planned-title">Planned</h2><article class="road-card"><p class="road-flag">Planned</p><h3>Packaged GitHub Action</h3><p>One-file setup for the pull-request check. Deferred to v0.2, post-v0.1, after the November 30 release. v0.1 ships a README CI workflow snippet instead.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>Stats gate rule</h3><p>Stats gate rule. Spec: non-inferiority, δ = 5 pp, 90% interval. Computed on real runs with Milestone B (target November 19).</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>Gate on real runs</h3><p>Verdict computation on real runs. Milestone B, November 19.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>MDE on the check</h3><p>Showing the MDE on the check is planned with Milestone B (target November 19). It is not a status.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>A second provider</h3><p>OpenAI or Anthropic, beside the Gemini adapter. Deferred to v0.2, post-v0.1, after the November 30 release.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>PyPI v0.1</h3><p>November 20 to 24. Not on PyPI yet.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>Company AWS account</h3><p>Move to a company AWS account, with Terraform state in S3. Deferred to v0.2, post-v0.1, after the November 30 release.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>Per-family breakdown</h3><p>An estimate and an interval for where the drop came from. No per-family verdict. The gate stays on the pooled result. Deferred to v0.2, post-v0.1.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>harness export-replay</h3><p>Recorded-run replays for this site. Deferred to v0.2, post-v0.1.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>HTML report</h3><p>A rendered HTML report of the run. Deferred to v0.2, post-v0.1.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>Bring-your-own scenarios</h3><p>Your own scenario set, in the documented format. Post-MVP.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>OTel trace import</h3><p>OpenTelemetry traces as a diagnostic. Spans do not set the suite status. Planned post-MVP.</p></article><article class="road-card"><p class="road-flag">Planned</p><h3>Bring-your-own bucket</h3><p>Data stays in your cloud is Planned, and post-MVP. Nothing uploads results yet.</p></article></section></div>
-        </div>
-        <nav class="docs-pager" aria-label="Previous and next"><a class="docs-prev" href="../changelog/"><span>Previous</span><b>Changelog</b></a><a class="docs-next" href="../dns-setup/"><span>Next</span><b>DNS setup</b></a></nav>
-      </article>
-    </div>
-  </main>
+    </section></main>
   <footer class="footer">
     <div class="wrap footer-grid">
       <div>
@@ -94,18 +72,28 @@
       <nav aria-label="Pages">
         <p>Product</p>
         <a href="../../">Overview</a>
-        <a href="../../how-it-works/">How it works</a>
-        <a href="../../method/">Method</a>
-        <a href="../../gate/">Gate</a>
+        <p>How it works</p>
+        <a href="../../how-it-works/">Film</a>
+        <a href="../../how-it-works/#method">Method</a>
+        <a href="../../how-it-works/#gate">Gate</a>
+        <a href="../../how-it-works/#exit-codes">Exit codes</a>
+        <p>Scenarios</p>
+        <a href="../../scenarios/">Boards</a>
+        <a href="../../scenarios/#use-cases">Use cases</a>
+        <p>Results</p>
         <a href="../../results/">Results</a>
-        <a href="../../performance/">Performance</a>
-        <a href="../../integrations/">Integrations</a>
+        <a href="../../results/#performance">Performance</a>
+        <p>Docs</p>
         <a href="../">Docs</a>
+        <a href="../getting-started/">Getting started</a>
         <a href="../install/">Install</a>
-        <a href="../getting-started/">Guide</a>
-        <a href="../../scenarios/">Scenarios</a>
-        <a href="../../use-cases/">Use cases</a>
+        <a href="../quickstart/">Quickstart</a>
+        <p>About</p>
         <a href="../../about/">About</a>
+        <a href="../../about/#roadmap">Roadmap</a>
+        <a href="../../about/#changelog">Changelog</a>
+        <a href="../../about/#integrations">Integrations</a>
+        <a href="../../about/#support">Support</a>
       </nav>
       <nav aria-label="Elsewhere">
         <p>Contact</p>

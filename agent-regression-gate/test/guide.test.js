@@ -212,9 +212,9 @@ test("getting started ports the verified guide", () => {
 });
 
 test("sample use cases follow the verified checks", () => {
-  const html = read("use-cases/index.html");
-  const main = mainOf(html);
-  assert.match(html, /https:\/\/anubys\.dev\/use-cases\//);
+  const html = read("scenarios/index.html");
+  const main = html.slice(html.indexOf('id="use-cases"'), html.indexOf("</main>"));
+  assert.match(read("use-cases/index.html"), /https:\/\/anubys\.dev\/scenarios\/#use-cases/);
   assert.match(main, /They do not call a model, and they do not spend money\./);
   assert.match(main, /Suite scoring, statistics, and report rendering are still placeholders/);
   assert.match(main, /stub that exits with an error on purpose/);
@@ -257,23 +257,29 @@ test("sample use cases follow the verified checks", () => {
   rejectForbidden(html, "use cases");
   assertCostsTagged(main, "use cases");
   const home = read("index.html");
-  assert.match(home, /href="use-cases\/"/);
+  assert.match(home, /href="scenarios\/#use-cases"/);
   assert.match(home, /class="btn btn-primary" href="docs\/getting-started\/">Get started/);
   for (const href of [
-    "use-cases/#why-youd-use-this",
-    "use-cases/#validate-examples",
-    "use-cases/#safety-checks",
-    "use-cases/#results-file",
-    "use-cases/#replay",
-    "use-cases/#tau-preview",
-    "use-cases/#live-model",
-    "use-cases/#github-ci",
+    "scenarios/#why-youd-use-this",
+    "scenarios/#validate-examples",
+    "scenarios/#safety-checks",
+    "scenarios/#results-file",
+    "scenarios/#replay",
+    "scenarios/#tau-preview",
+    "scenarios/#live-model",
+    "scenarios/#github-ci",
   ]) {
     assert.ok(home.includes(href), href);
   }
   const nav = home.slice(home.indexOf('aria-label="Primary"'), home.indexOf("</nav>"));
-  assert.match(nav, />Use cases<\/a>/);
-  assert.match(nav, />Guide<\/a>/);
+  assert.match(nav, />Product<\/a>/);
+  assert.match(nav, />How it works<\/a>/);
+  assert.match(nav, />Scenarios<\/a>/);
+  assert.match(nav, />Results<\/a>/);
+  assert.match(nav, />Docs<\/a>/);
+  assert.match(nav, />About<\/a>/);
+  assert.doesNotMatch(nav, />Guide<\/a>/);
+  assert.doesNotMatch(nav, />Use cases<\/a>/);
 });
 
 test("guide styles keep orange on the active tab, copy hover, and Block chip only", () => {

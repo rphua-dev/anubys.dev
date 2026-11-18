@@ -37,6 +37,7 @@ test("site pages, site JS, and both READMEs stay clear of banned copy", () => {
     assert.doesNotMatch(text, EM_DASH, `${label} em dash`);
     assert.doesNotMatch(text, /monthly_hard_stop_usd/, `${label} monthly_hard_stop_usd`);
     assert.doesNotMatch(text, /Public beta/, `${label} Public beta`);
+    assert.doesNotMatch(text, /paired by scenario/i, `${label} paired by scenario`);
     for (const link of text.match(paypal) || []) {
       assert.equal(link.toLowerCase(), "https://paypal.me/ryanphua17", `${label} donate link`);
     }
