@@ -14,7 +14,7 @@ export const METHOD_NOTES = {
   sample: "Simplified sample scorer, not the gate's statistic.",
   miss: "More than 5% of scheduled rollouts excluded in either arm invalidates the run. Exactly 5% is still scored. The 5% line is compared in integers.",
   coverage: "Each scenario needs at least ceil(0.6 × scheduled) valid rollouts on both arms. 0.6 is 3/5, and the ceiling uses integer arithmetic.",
-  pairing: "The gap is the unweighted average of (candidate pass rate − baseline pass rate) across scenarios. Each scenario counts once. Scenarios are combined in id order, so the recorded order cannot change the verdict.",
+  pairing: "The gap is the candidate pass rate minus the baseline pass rate, with passes and counted rollouts pooled across scenarios within each arm. The recorded order cannot change the verdict.",
   regression: "Non-inferiority, δ = 5 pp. Pass if the 90% interval's lower bound is above −5 pp. Block if its upper bound is below −5 pp. Otherwise the result is insufficient evidence, which can carry a Likely regression warning. Likely regression is a spec flag, not computed in v0.1 (deferred to v0.2). An invalid run isn't scored.",
   timeouts: "An agent timeout (a loop, or the step budget ran out) scores 0 and counts as a valid rollout. An infrastructure timeout (provider 5xx, a rate limit, or a killed CI runner) is excluded from the score and counts toward the 5% miss limit. A missing result is treated the same way.",
   hashes: "Hashes are checked by harness validate, which fails before a run (exit 1). The gate reads outcome files and does not treat a hash mismatch as an Invalid run.",
@@ -99,14 +99,6 @@ export function summarizeArm(arm) {
   };
 }
 
-export function jeffreysVariance(successes, total) {
-  if (total <= 0) return 0;
-  const alpha = successes + 0.5;
-  const beta = total - successes + 0.5;
-  const sum = alpha + beta;
-  return (alpha * beta) / (sum * sum * (sum + 1));
-}
-
 export function inverseNorm(p) {
   if (!(p > 0 && p < 1)) throw new Error("probability must be between 0 and 1");
   const a = [-3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2, 1.38357751867269e2, -3.066479806614716e1, 2.506628277459239];
@@ -126,6 +118,26 @@ export function inverseNorm(p) {
   const q = p - 0.5;
   const r = q * q;
   return ((((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q) / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+}
+
+function clipUnit(value) {
+  return Math.min(1, Math.max(-1, value));
+}
+
+function pooledInterval(baselinePasses, baselineValid, candidatePasses, candidateValid, confidence) {
+  const baselineRate = (baselinePasses + 1) / (baselineValid + 2);
+  const candidateRate = (candidatePasses + 1) / (candidateValid + 2);
+  const center = candidateRate - baselineRate;
+  const standardError = Math.sqrt(
+    (baselineRate * (1 - baselineRate)) / (baselineValid + 2)
+    + (candidateRate * (1 - candidateRate)) / (candidateValid + 2),
+  );
+  const z = inverseNorm(0.5 + confidence / 2);
+  return {
+    lower: clipUnit(center - z * standardError),
+    upper: clipUnit(center + z * standardError),
+    standardError,
+  };
 }
 
 export function formatSignedNumber(delta) {
@@ -254,16 +266,9 @@ export function scoreRun(scenarios, options = {}) {
     };
   }
 
-  const ordered = [...rows].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const meanDelta = ordered.reduce((sum, row) => sum + (row.delta ?? 0), 0) / ordered.length;
-  let varianceSum = 0;
-  for (const row of ordered) {
-    varianceSum += jeffreysVariance(row.baseline.passes, row.baseline.valid) + jeffreysVariance(row.candidate.passes, row.candidate.valid);
-  }
-  const standardError = Math.sqrt(varianceSum / (ordered.length * ordered.length));
-  const z = inverseNorm(0.5 + confidence / 2);
-  const lower = meanDelta - z * standardError;
-  const upper = meanDelta + z * standardError;
+  const meanDelta = candidate.passes / candidate.valid - baseline.passes / baseline.valid;
+  const interval = pooledInterval(baseline.passes, baseline.valid, candidate.passes, candidate.valid, confidence);
+  const { lower, upper, standardError } = interval;
   const nonInferiority = 0.05;
   const block = upper < -nonInferiority;
   const pass = lower > -nonInferiority;

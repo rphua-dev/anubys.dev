@@ -157,6 +157,10 @@ test("boards 3 to 6 keep the gate command, the top-level verdict, and the run-lo
   assert.match(merge.samples.commands, /harness gate --baseline runs\/baseline --candidate runs\/candidate --rollouts 5 --json runs\/verdict\.json/);
   assert.doesNotMatch(merge.samples.output, /model_version=/);
   assert.match(merge.samples.results, /"verdict": "pass"/);
+  assert.match(merge.samples.pipeline, /ci_lower: -0\.027169850823/);
+  assert.match(merge.samples.pipeline, /ci_upper: 0\.023185787078/);
+  assert.match(merge.samples.results, /"lower": -0\.0272, "upper": 0\.0232/);
+  assert.match(merge.verdict.why, /at 500 counted rollouts per arm/);
   assert.match(merge.samples.resultsCaption, /excerpt/);
   assert.match(merge.samples.pipelineCaption, /excerpt/);
   assert.match(renderDialogHtml(merge), /Example pipeline step/);
@@ -169,13 +173,20 @@ test("boards 3 to 6 keep the gate command, the top-level verdict, and the run-lo
   assert.doesNotMatch(interval.samples.output, /model_version=/);
   assert.match(interval.samples.results, /"verdict": "insufficient_evidence"/);
   assert.doesNotMatch(interval.samples.results, /diagnostics/);
-  assert.match(interval.samples.diagnostics, /"scenario_id": "acme.return.003.v1"/);
+  assert.equal("diagnostics" in interval.samples, false);
+  assert.match(interval.samples.pipeline, /ci_lower: -0\.0988344439284/);
+  assert.match(interval.samples.pipeline, /ci_upper: 0\.0596187576539/);
+  assert.match(interval.samples.results, /"lower": -0\.0988, "upper": 0\.0596/);
   assert.equal(interval.samples.resultsCaption, "Gate JSON excerpt, rounded for display");
-  assert.equal(interval.samples.diagnosticsCaption, "Diagnostic rows (Example)");
-  assert.match(renderDialogHtml(interval), /Diagnostic rows \(Example\)/);
-  assert.match(renderDialogHtml(interval), /Example pipeline step/);
-  assert.match(renderDialogHtml(interval), /crosses the minus 5 point margin/);
-  assert.match(renderDialogHtml(interval), /Diagnostic only/);
+  const intervalDialog = renderDialogHtml(interval);
+  assert.doesNotMatch(intervalDialog, /Diagnostic rows/);
+  assert.doesNotMatch(intervalDialog, /acme\.return\.003|acme\.cancel\.001|-0\.9604|-0\.2652/);
+  assert.match(intervalDialog, /Example pipeline step/);
+  assert.match(intervalDialog, /crosses the minus 5 point margin/);
+  assert.match(intervalDialog, /diagnostics only/);
+  assert.match(intervalDialog, /about minus 9\.9 points to plus 6\.0 points/);
+  assert.match(intervalDialog, /from -9\.9 points to 6 points/);
+  assert.match(intervalDialog, /Even a perfectly clean small run lands here\./);
 
   const misses = board("environment-misses");
   assert.equal(misses.verdict.display, "Invalid run");

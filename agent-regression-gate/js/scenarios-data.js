@@ -161,8 +161,8 @@ That's 100 invented scenarios times 5 rollouts, so 500 per arm.`;
 const BOARD_4_PIPELINE = `Run harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5 --json runs/verdict.json
 verdict: pass
 difference: -0.002
-ci_lower: -0.0268972382375
-ci_upper: 0.0228972382375
+ci_lower: -0.027169850823
+ci_upper: 0.023185787078
 ci_level: 0.9
 delta: 0.05
 baseline_pass_rate: 0.94
@@ -182,7 +182,7 @@ const BOARD_4_RESULTS = `{
   "delta": 0.05,
   "ci_level": 0.9,
   "difference": -0.002,
-  "difference_ci": { "lower": -0.0269, "upper": 0.0229, "level": 0.9 },
+  "difference_ci": { "lower": -0.0272, "upper": 0.0232, "level": 0.9 },
   "baseline_pass_rate": 0.94,
   "candidate_pass_rate": 0.938,
   "baseline_passes": 470,
@@ -211,8 +211,8 @@ That's 20 invented scenarios times 5 rollouts, so 100 per arm.`;
 const BOARD_5_PIPELINE = `Run harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5
 verdict: insufficient_evidence
 difference: -0.02
-ci_lower: -0.0981954487567
-ci_upper: 0.0581954487567
+ci_lower: -0.0988344439284
+ci_upper: 0.0596187576539
 ci_level: 0.9
 delta: 0.05
 baseline_pass_rate: 0.88
@@ -232,7 +232,7 @@ const BOARD_5_RESULTS = `{
   "delta": 0.05,
   "ci_level": 0.9,
   "difference": -0.02,
-  "difference_ci": { "lower": -0.0982, "upper": 0.0582, "level": 0.9 },
+  "difference_ci": { "lower": -0.0988, "upper": 0.0596, "level": 0.9 },
   "baseline_pass_rate": 0.88,
   "candidate_pass_rate": 0.86,
   "baseline_passes": 88,
@@ -241,31 +241,6 @@ const BOARD_5_RESULTS = `{
   "candidate_counted": 100,
   "reasons": []
 }`;
-
-const BOARD_5_DIAGNOSTICS = `[
-  {
-    "scenario_id": "acme.return.003.v1",
-    "family_id": "acme.return.003",
-    "scheduled_rollouts": { "baseline": 5, "candidate": 5 },
-    "miss_counts": { "baseline": 0, "candidate": 0 },
-    "baseline_pass_rate": 1.0,
-    "candidate_pass_rate": 0.4,
-    "difference": -0.6,
-    "difference_ci": { "lower": -0.9604, "upper": -0.2396, "level": 0.9 },
-    "note": "Diagnostic only. The suite verdict is the only gate."
-  },
-  {
-    "scenario_id": "acme.cancel.001.v1",
-    "family_id": "acme.cancel.001",
-    "scheduled_rollouts": { "baseline": 5, "candidate": 5 },
-    "miss_counts": { "baseline": 0, "candidate": 0 },
-    "baseline_pass_rate": 0.6,
-    "candidate_pass_rate": 0.8,
-    "difference": 0.2,
-    "difference_ci": { "lower": -0.2652, "upper": 0.6652, "level": 0.9 },
-    "note": "Diagnostic only."
-  }
-]`;
 
 const BOARD_6_COMMANDS = `harness gate --baseline runs/baseline --candidate runs/candidate --rollouts 5 --json gate.json`;
 
@@ -502,7 +477,7 @@ export const SCENARIOS = [
       scope: "gate",
       display: "Pass",
       exit: 0,
-      why: "The sample is a Pass: the gap is tiny and the whole 90% interval stays above minus 5 points. Safe to merge. The exit code is the verdict. Anything other than 0 fails a plain CI step, on purpose.",
+      why: "The sample is a Pass at 500 counted rollouts per arm: the gap is tiny and the whole 90% interval stays above minus 5 points. Safe to merge. The exit code is the verdict. Anything other than 0 fails a plain CI step, on purpose.",
     },
     exits: [
       { outcome: "Pass", exit: 0, next: "Merge is fine", verdict: true },
@@ -533,16 +508,16 @@ export const SCENARIOS = [
     title: "The interval crosses the margin",
     hook: "\"We can't tell yet\" is a real answer, and it's not a pass.",
     placeholder: false,
-    situation: "{example} The candidate scored 86 out of 100 and the baseline scored 88 out of 100. Two points lower. Somebody in the pull request says it's basically the same. {example} Somebody else points at a scenario where the candidate dropped from 5 out of 5 to 2 out of 5 and says it's clearly worse. Both are guessing.",
+    situation: "{example} The candidate scored 86 out of 100 and the baseline scored 88 out of 100. Two points lower. Somebody in the pull request says it's basically the same. {example} Somebody else points at a single scenario that looks much worse and says it's clearly worse. Both are guessing.",
     steps: [
-      "Run more rollouts, or keep the current agent. Small suites land here a lot, because few rollouts means a wide interval.",
+      "Run more rollouts, or keep the current agent. Small suites land here a lot, because few rollouts means a wide interval. Even a perfectly clean small run lands here.",
       "Do not read one scenario row as its own gate. Per-scenario rows are diagnostics only. They have no pass or block field. One row can look worse while the suite verdict is still Pass, and one row can look fine while the suite is Block. Only the suite verdict decides.",
     ],
     verdict: {
       scope: "gate",
       display: "Insufficient evidence",
       exit: 3,
-      why: "Insufficient evidence, exit 3. The gate builds a 90% interval on the pass-rate gap (candidate minus baseline), with rollouts pooled within each arm. The rule uses a 5 point margin and one-sided alpha 0.05. {example} Here the interval runs from about minus 9.8 points to plus 5.8 points. It covers minus 5, so the data fits \"fine\" and it also fits \"5 points worse\". A bound that only touches minus 5 doesn't count either way. The sample bounds are illustrative. The rule stays: compare the interval with minus 5 points.",
+      why: "Insufficient evidence, exit 3. The gate builds a 90% interval on the pass-rate gap (candidate minus baseline), with rollouts pooled within each arm. The rule uses a 5 point margin and one-sided alpha 0.05. {example} Here the interval runs from about minus 9.9 points to plus 6.0 points. It covers minus 5, so the data fits \"fine\" and it also fits \"5 points worse\". A bound that only touches minus 5 doesn't count either way. The sample bounds are illustrative. The rule stays: compare the interval with minus 5 points.",
     },
     rules: [
       "Lower end above minus 5 points: Pass.",
@@ -553,8 +528,8 @@ export const SCENARIOS = [
       min: -15,
       max: 10,
       margin: -5,
-      lower: -9.8,
-      upper: 5.8,
+      lower: -9.9,
+      upper: 6.0,
       caption: "The 90% interval crosses the minus 5 point margin.",
     },
     extra: "{example} The gap in this sample is minus 2 points. likely_regression is only true when the verdict is Insufficient evidence and the point estimate is strictly below minus 5 points. In v0.1 the gate doesn't compute that flag from a run. Exit 3 means run more rollouts. If your pipeline wants to treat that differently from a Block, catch the code in the step instead of letting it fail the job.",
@@ -564,8 +539,6 @@ export const SCENARIOS = [
       pipeline: BOARD_5_PIPELINE,
       results: BOARD_5_RESULTS,
       resultsCaption: "Gate JSON excerpt, rounded for display",
-      diagnostics: BOARD_5_DIAGNOSTICS,
-      diagnosticsCaption: "Diagnostic rows (Example)",
     },
   },
   {
