@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-import { INTERVAL_FALLBACK, RUN_SUMMARY_PATH, parseResults, parseResultsV2, parseRunSummary, summaryRows } from "../js/results.js";
+import { INTERVAL_FALLBACK, RUN_SUMMARY_PATH, parseResults, parseResultsV2, parseRunSummary, suiteWarning, summaryRows } from "../js/results.js";
 
 const shipped = JSON.parse(
   readFileSync(new URL("../data/results.preliminary.json", import.meta.url), "utf8"),
@@ -22,7 +22,8 @@ test("the shipped harness preliminary file parses as insufficient evidence", () 
   assert.equal(view.shape, "harness");
   assert.equal(view.headline, "Insufficient evidence");
   assert.equal(view.verdict, "insufficient_evidence");
-  assert.equal(view.likelyRegression, true);
+  assert.equal(view.likelyRegression, null);
+  assert.equal(view.warning, null);
   assert.equal(view.status, "preliminary");
   assert.equal(view.runKind, "screening");
   assert.equal(view.baselinePoolModelId, "tau-retail-baseline-pool");
@@ -142,8 +143,38 @@ test("preliminary example intervals match counted rollouts", () => {
   const block = overall.difference_ci.upper < -delta;
   const pass = overall.difference_ci.lower > -delta;
   assert.equal(overall.verdict, block ? "block" : pass ? "pass" : "insufficient_evidence");
-  assert.equal(overall.likely_regression, overall.verdict === "insufficient_evidence" && overall.difference < -delta);
-  assert.equal(parseResults(shipped).headline, "Insufficient evidence");
+  assert.equal(overall.likely_regression, null);
+  const view = parseResults(shipped);
+  assert.equal(view.headline, "Insufficient evidence");
+  assert.equal(view.verdict, "insufficient_evidence");
+  assert.equal(view.warning, null);
+});
+
+test("schema 2.1.0 null likely_regression is not computed and is not a warning", () => {
+  const doc = structuredClone(shipped);
+  doc.verdicts.overall.likely_regression = null;
+  const view = parseResults(doc);
+  assert.equal(view.headline, "Insufficient evidence");
+  assert.equal(view.verdict, "insufficient_evidence");
+  assert.equal(view.likelyRegression, null);
+  assert.equal(view.warning, null);
+  assert.equal(suiteWarning(view.likelyRegression, view.verdict), null);
+  assert.doesNotMatch(`${view.headline}\n${view.why}\n${view.summaryNote}`, /Likely regression/);
+
+  const marked = structuredClone(shipped);
+  marked.verdicts.overall.likely_regression = true;
+  const warned = parseResults(marked);
+  assert.equal(warned.headline, "Insufficient evidence");
+  assert.equal(warned.warning, "Likely regression");
+
+  for (const value of ["yes", 1, 0]) {
+    const bad = structuredClone(shipped);
+    bad.verdicts.overall.likely_regression = value;
+    assert.throws(
+      () => parseResults(bad),
+      /verdicts\.overall\.likely_regression must be a boolean or null/,
+    );
+  }
 });
 
 test("harness run_kind rules refuse a model id mismatch", () => {

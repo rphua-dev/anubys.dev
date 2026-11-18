@@ -420,9 +420,16 @@
           "title": "Delta"
         },
         "likely_regression": {
-          "description": "True only when the verdict is insufficient_evidence and the point estimate is strictly below -delta (FR-25, C7). Required, no default.",
-          "title": "Likely Regression",
-          "type": "boolean"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "True only when the verdict is insufficient_evidence and the point estimate is strictly below -delta (FR-25, C7). Null means the flag is not computed. Required, no default.",
+          "title": "Likely Regression"
         },
         "model_ids": {
           "$ref": "#/$defs/VerdictModelIds",

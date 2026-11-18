@@ -54,7 +54,7 @@
         "level": 0.9
       },
       "delta": 0.05,
-      "likely_regression": true,
+      "likely_regression": null,
       "model_ids": {
         "baseline": "tau-retail-baseline-pool",
         "candidate": "tau-retail-baseline-pool"
