@@ -189,6 +189,63 @@ test("demo scenario hashes are the SHA-256 of the scenario text", () => {
   }
 });
 
+test("pooled interval on the pass-rate gap", () => {
+  const cases = [
+    { baseline: [390, 390], candidate: [390, 390], verdict: "no_regression", headline: "Pass", lower: -0.006, upper: 0.006, gap: 0 },
+    { baseline: [470, 500], candidate: [469, 500], verdict: "no_regression", headline: "Pass", lower: -0.02717, upper: 0.02319, gap: -0.002 },
+    { baseline: [88, 100], candidate: [86, 100], verdict: "insufficient", headline: "Insufficient evidence", lower: -0.0988, upper: 0.0596, gap: -0.02 },
+    { baseline: [340, 390], candidate: [300, 390], verdict: "likely_regression", headline: "Block", lower: -0.147, upper: -0.057, gap: 300 / 390 - 340 / 390 },
+    { baseline: [5, 5], candidate: [5, 5], verdict: "insufficient", headline: "Insufficient evidence", lower: -0.308, upper: 0.308, gap: 0 },
+  ];
+  for (const item of cases) {
+    const result = scorePair(item.baseline, item.candidate);
+    const label = `${item.baseline.join("/")} vs ${item.candidate.join("/")}`;
+    assert.equal(result.verdict, item.verdict, label);
+    assert.equal(result.headline, item.headline, label);
+    assert.ok(Math.abs(result.lower - item.lower) < 1e-3, `${label} lower ${result.lower}`);
+    assert.ok(Math.abs(result.upper - item.upper) < 1e-3, `${label} upper ${result.upper}`);
+    assert.ok(Math.abs(result.meanDelta - item.gap) < 1e-12, `${label} gap ${result.meanDelta}`);
+    assert.ok(result.lower >= -1 && result.upper <= 1, label);
+  }
+
+  const near = scorePair([100, 100], [90, 100]);
+  assert.equal(near.verdict, "insufficient");
+  assert.equal(near.headline, "Insufficient evidence");
+  assert.ok(Math.abs(near.upper + 0.045) < 1e-3, near.upper);
+  assert.ok(near.upper > -0.05, near.upper);
+  assert.ok(near.lower < -0.05, near.lower);
+  assert.ok(Math.abs(near.meanDelta + 0.1) < 1e-12);
+
+  const split = scoreRun([
+    scenario("wide", { baseline: countedArm(10, 10), candidate: countedArm(10, 10) }),
+    scenario("rest", { baseline: countedArm(78, 90), candidate: countedArm(76, 90) }),
+  ]);
+  const whole = scorePair([88, 100], [86, 100]);
+  assert.equal(split.verdict, whole.verdict);
+  assert.equal(split.lower, whole.lower);
+  assert.equal(split.upper, whole.upper);
+  assert.equal(split.meanDelta, whole.meanDelta);
+});
+
+function countedArm(passes, total) {
+  return {
+    scheduled: total,
+    slots: [
+      ...Array.from({ length: passes }, () => "pass"),
+      ...Array.from({ length: total - passes }, () => "fail"),
+    ],
+  };
+}
+
+function scorePair(baseline, candidate) {
+  return scoreRun([
+    scenario("only", {
+      baseline: countedArm(baseline[0], baseline[1]),
+      candidate: countedArm(candidate[0], candidate[1]),
+    }),
+  ]);
+}
+
 function scenario(id, arms) {
   return { id, name: id, ...arms };
 }
