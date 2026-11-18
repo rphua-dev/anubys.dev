@@ -571,6 +571,13 @@ export function bindStory(doc = document) {
   return update;
 }
 
+/** Pause control: aria-pressed matches the paused flag, and the label follows. */
+export function syncFilmPause(button, paused) {
+  if (!button) return;
+  button.setAttribute("aria-pressed", paused ? "true" : "false");
+  button.textContent = paused ? "Play" : "Pause";
+}
+
 /** Landing sequence: one graphic at a time. The full story stays on its own route. */
 export function renderFilmHtml(steps = STORY_STEPS) {
   const frames = steps.map((step, index) => {
@@ -611,6 +618,8 @@ export function bindFilm(root, win = typeof window === "undefined" ? null : wind
   let timer = 0;
   let paused = false;
   const reduce = win.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const paintPause = () => syncFilmPause(pauseBtn, paused);
+  paintPause();
 
   const show = (next) => {
     const count = frames.length;
@@ -672,8 +681,7 @@ export function bindFilm(root, win = typeof window === "undefined" ? null : wind
   });
   pauseBtn?.addEventListener("click", () => {
     paused = !paused;
-    pauseBtn.setAttribute("aria-pressed", String(paused));
-    pauseBtn.textContent = paused ? "Play" : "Pause";
+    paintPause();
     if (paused) stop();
     else start();
   });
