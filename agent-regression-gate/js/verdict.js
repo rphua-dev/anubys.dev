@@ -124,6 +124,8 @@ function clipUnit(value) {
   return Math.min(1, Math.max(-1, value));
 }
 
+// Bounds are clipped to [-1, 1]. meanDelta is the raw observed gap and can sit
+// outside these bounds at tiny n, for example 0/1 vs 1/1.
 function pooledInterval(baselinePasses, baselineValid, candidatePasses, candidateValid, confidence) {
   const baselineRate = (baselinePasses + 1) / (baselineValid + 2);
   const candidateRate = (candidatePasses + 1) / (candidateValid + 2);
@@ -266,6 +268,8 @@ export function scoreRun(scenarios, options = {}) {
     };
   }
 
+  // Raw observed gap (candidate passes / counted minus baseline passes / counted).
+  // It can sit outside the clipped bounds at tiny n, for example 0/1 vs 1/1.
   const meanDelta = candidate.passes / candidate.valid - baseline.passes / baseline.valid;
   const interval = pooledInterval(baseline.passes, baseline.valid, candidate.passes, candidate.valid, confidence);
   const { lower, upper, standardError } = interval;

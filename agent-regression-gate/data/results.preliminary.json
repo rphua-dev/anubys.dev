@@ -47,19 +47,19 @@
     },
     "overall": {
       "verdict": "insufficient_evidence",
-      "difference": -0.04,
+      "difference": -0.06666666666666665,
       "difference_ci": {
-        "lower": -0.18,
-        "upper": 0.09,
+        "lower": -0.286343,
+        "upper": 0.168696,
         "level": 0.9
       },
       "delta": 0.05,
-      "likely_regression": false,
+      "likely_regression": true,
       "model_ids": {
         "baseline": "tau-retail-baseline-pool",
         "candidate": "tau-retail-baseline-pool"
       },
-      "note": "FAKE. The 90% interval crosses -delta, so the suite gate is not pass or block."
+      "note": "FAKE. Scored rollouts, leaving out the scenario with no pass rates, pool to baseline 13 passes out of 15 counted and candidate 12 passes out of 15 counted. The 90% interval crosses -delta, so the suite gate is not pass or block."
     },
     "diagnostics": [
       {
@@ -78,14 +78,14 @@
           "candidate": []
         },
         "baseline_pass_rate": 0.8,
-        "candidate_pass_rate": 0.82,
-        "difference": 0.02,
+        "candidate_pass_rate": 0.8,
+        "difference": 0,
         "difference_ci": {
-          "lower": -0.03,
-          "upper": 0.07,
+          "lower": -0.397187,
+          "upper": 0.397187,
           "level": 0.9
         },
-        "note": "FAKE diagnostic. Not a gate verdict."
+        "note": "FAKE diagnostic. Not a gate verdict. Baseline 4 passes out of 5 counted, candidate 4 passes out of 5 counted."
       },
       {
         "scenario_id": "example.other.v1",
@@ -102,15 +102,15 @@
           "baseline": [],
           "candidate": []
         },
-        "baseline_pass_rate": 0.7,
-        "candidate_pass_rate": 0.58,
-        "difference": -0.12,
+        "baseline_pass_rate": 0.8,
+        "candidate_pass_rate": 0.6,
+        "difference": -0.2,
         "difference_ci": {
-          "lower": -0.2,
-          "upper": -0.06,
+          "lower": -0.559431,
+          "upper": 0.273716,
           "level": 0.9
         },
-        "note": "FAKE diagnostic. The suite gate above is the only verdict."
+        "note": "FAKE diagnostic. The suite gate above is the only verdict. Baseline 4 passes out of 5 counted, candidate 3 passes out of 5 counted."
       },
       {
         "scenario_id": "example.broken.v1",
@@ -146,15 +146,15 @@
           "baseline": [],
           "candidate": []
         },
-        "baseline_pass_rate": 0.9,
-        "candidate_pass_rate": 0.9,
-        "difference": 0.0,
+        "baseline_pass_rate": 1,
+        "candidate_pass_rate": 1,
+        "difference": 0,
         "difference_ci": {
-          "lower": -0.02,
-          "upper": 0.02,
+          "lower": -0.30766,
+          "upper": 0.30766,
           "level": 0.9
         },
-        "note": "FAKE diagnostic. Scheduled count equals rollouts_per_scenario on both arms."
+        "note": "FAKE diagnostic. 5 passes out of 5 counted on each arm. Scheduled count equals rollouts_per_scenario on both arms."
       }
     ]
   },
